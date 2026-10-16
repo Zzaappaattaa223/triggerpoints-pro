@@ -1,4 +1,4 @@
-# TriggerPoints PRO • Medical Grade
+# BodyMap para Masajistas (TriggerPoints PRO • Medical Grade)
 
 Plataforma anatómica y de mapeo miofascial de grado médico basada en la semiología de Travell & Simons, cadenas miofasciales de Thomas Myers y osteopatía funcional.
 
@@ -13,8 +13,9 @@ Plataforma anatómica y de mapeo miofascial de grado médico basada en la semiol
 ## Estructura del Proyecto
 
 ```
-triggerpoints-pro/
+bodymap-para-masajistas/
 ├── index.html                  # Aplicación clínica interactiva
+├── analyze_landmarks.js        # Utilidad de análisis de puntos de referencia
 ├── assets/
 │   └── images/                 # Fotogrametría anatómica de estudio
 │       ├── female_anterior.jpg
