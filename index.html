@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TriggerPoints Pro • Mapeo Anatómico Fotorrealista de Grado Médico</title>
+  <title>TriggerPoints Pro • Estación Anatómica de Grado Médico</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -14,6 +14,7 @@
             medical: {
               50: '#f0f9ff',
               100: '#e0f2fe',
+              400: '#38bdf8',
               500: '#0ea5e9',
               600: '#0284c7',
               700: '#0369a1',
@@ -28,30 +29,38 @@
   </script>
   <style>
     @keyframes pulse-glow {
-      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(239,68,68,0.9)); }
-      50% { transform: scale(1.18); filter: drop-shadow(0 0 18px rgba(239,68,68,1)); }
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(239,68,68,0.85)); }
+      50% { transform: scale(1.15); filter: drop-shadow(0 0 16px rgba(239,68,68,1)); }
     }
     .animate-trigger {
       animation: pulse-glow 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
       transform-origin: center;
       transform-box: fill-box;
     }
-    .bone-landmark {
+    .bone-line {
       stroke: #38bdf8;
-      stroke-dasharray: 2, 2;
-      opacity: 0.6;
-      transition: opacity 0.2s;
+      stroke-dasharray: 3, 3;
+      opacity: 0.7;
+      transition: all 0.2s;
     }
-    .bone-landmark:hover {
+    .bone-line:hover {
       opacity: 1;
-      stroke-width: 2;
+      stroke-width: 2.2;
+      stroke: #7dd3fc;
+    }
+    /* Estilo del visor anatómico interactivo */
+    #viewport-container {
+      cursor: grab;
+    }
+    #viewport-container.panning {
+      cursor: grabbing;
     }
   </style>
 </head>
-<body class="h-full flex flex-col font-sans antialiased overflow-hidden select-none">
+<body class="h-full flex flex-col font-sans antialiased overflow-hidden select-none bg-slate-950">
 
-  <!-- ENCABEZADO SUPERIOR CLÍNICO -->
-  <header class="h-14 border-b border-slate-800 bg-slate-900/90 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0">
+  <!-- TOP CLINICAL WORKSTATION BAR -->
+  <header class="h-14 border-b border-slate-800 bg-slate-900/95 backdrop-blur px-6 flex items-center justify-between z-30 shrink-0">
     <div class="flex items-center gap-3">
       <div class="w-8 h-8 rounded-lg bg-medical-600 flex items-center justify-center shadow-lg shadow-medical-600/30">
         <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -60,43 +69,43 @@
       </div>
       <div>
         <div class="flex items-center gap-2">
-          <h1 class="text-base font-bold tracking-tight text-white">TriggerPoints <span class="text-medical-500">PRO</span></h1>
-          <span class="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Ultra-Realistic Clinical Grade</span>
+          <h1 class="text-sm font-bold tracking-tight text-white">TriggerPoints <span class="text-medical-400">PRO</span></h1>
+          <span class="text-[9px] uppercase font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Medical Grade Workstation</span>
         </div>
-        <p class="text-[11px] text-slate-400">Fotogrametría Anatómica Real • Osteopatía, Fisioterapia y Masoterapia Full Body</p>
+        <p class="text-[10px] text-slate-400">Calibración Morfológica Real • Osteopatía, Fisioterapia y Masoterapia</p>
       </div>
     </div>
 
-    <!-- SELECTORES CENTRALES (GÉNERO, VISTA, TRANSLUCIDEZ) -->
-    <div class="flex items-center gap-4">
+    <!-- SELECTORES CENTRALES DE GÉNERO Y ORIENTACIÓN -->
+    <div class="flex items-center gap-3">
       
-      <!-- SELECTOR DE GÉNERO (CON FOTOGRAFÍAS REALES) -->
+      <!-- GÉNERO (CONMUTACIÓN DE FOTOGRAMETRÍA INDEPENDIENTE) -->
       <div class="bg-slate-950 p-1 rounded-xl border border-slate-800 flex items-center gap-1 shadow-inner">
         <button id="btn-female" onclick="setGender('female')" class="px-3 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 bg-medical-600 text-white shadow-sm">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M12 14v7M9 18h6"/></svg>
-          Femenino (Foto Real)
+          Modelo Femenino
         </button>
         <button id="btn-male" onclick="setGender('male')" class="px-3 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-white">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="10" cy="14" r="5"/><path d="M19 5l-5.4 5.4M19 5h-5M19 5v5"/></svg>
-          Masculino (Foto Real)
+          Modelo Masculino
         </button>
       </div>
 
-      <!-- SELECTOR DE VISTA -->
+      <!-- VISTA ANATÓMICA -->
       <div class="bg-slate-950 p-1 rounded-xl border border-slate-800 flex items-center gap-1 shadow-inner">
         <button id="btn-view-post" onclick="setView('posterior')" class="px-3 py-1 rounded-lg text-xs font-semibold transition bg-slate-800 text-white">
           Posterior (Dorsal)
         </button>
         <button id="btn-view-ant" onclick="setView('anterior')" class="px-3 py-1 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white">
-          Anterior (Frontal)
+          Anterior (Ventral)
         </button>
       </div>
 
     </div>
 
-    <!-- BUSCADOR -->
+    <!-- BUSCADOR CLÍNICO RÁPIDO -->
     <div class="relative w-64">
-      <input type="text" id="quick-search" placeholder="Buscar músculo o dolor..." 
+      <input type="text" id="quick-search" placeholder="Buscar síntoma o músculo..." 
         class="w-full bg-slate-950/80 border border-slate-800 rounded-lg px-3 py-1.5 pl-8 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-medical-500 focus:ring-1 focus:ring-medical-500 transition"
         oninput="handleSearch(this.value)">
       <svg class="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,21 +114,21 @@
     </div>
   </header>
 
-  <!-- CUERPO PRINCIPAL -->
+  <!-- CONTENEDOR DE TRABAJO EN 3 PANELES -->
   <div class="flex-1 flex overflow-hidden">
 
-    <!-- PANEL LATERAL IZQUIERDO: CONTROLES DE CAPA Y REPAROS ÓSEOS -->
-    <aside class="w-80 border-r border-slate-800 bg-slate-900/60 backdrop-blur flex flex-col shrink-0">
+    <!-- PANEL LATERAL IZQUIERDO: CONTROLES CLÍNICOS, CAPAS Y LEYENDA INTEGRADA -->
+    <aside class="w-80 border-r border-slate-800 bg-slate-900/60 backdrop-blur flex flex-col shrink-0 z-20">
       
-      <!-- CONTROL DESLIZANTE DE DISECCIÓN QUIRÚRGICA / RAYOS X -->
+      <!-- CONTROL DE DISECCIÓN TISULAR CONTINUA -->
       <div class="p-4 border-b border-slate-800 bg-slate-950/40">
         <div class="flex items-center justify-between mb-1.5">
           <label class="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5 text-medical-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-            Nivel de Disección Tisular
+            Transiluminación / Profundidad
           </label>
           <span id="dissection-val-label" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-medical-950 border border-medical-500/30 text-medical-300">
-            50% Mixto
+            50% Transiluminado
           </span>
         </div>
         
@@ -128,21 +137,22 @@
         <div class="flex justify-between text-[10px] text-slate-500 font-medium">
           <span class="hover:text-slate-300 cursor-pointer" onclick="setDissectionLevel(0)">0% Piel Real</span>
           <span class="hover:text-slate-300 cursor-pointer" onclick="setDissectionLevel(50)">50% Fascia/Media</span>
-          <span class="hover:text-slate-300 cursor-pointer" onclick="setDissectionLevel(100)">100% Profundo/Óseo</span>
+          <span class="hover:text-slate-300 cursor-pointer" onclick="setDissectionLevel(100)">100% Plano Óseo</span>
         </div>
       </div>
 
-      <!-- CAPAS MUSCULARES DIRECTAS -->
-      <div class="p-4 border-b border-slate-800">
-        <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">Estrato Anatómico</label>
-        <div class="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-center text-xs">
-          <button id="layer-sup" onclick="setLayer('superficial')" class="py-1 rounded bg-medical-700 text-white font-medium shadow-sm">Superficial</button>
-          <button id="layer-med" onclick="setLayer('intermedia')" class="py-1 rounded text-slate-400 hover:text-white font-medium">Intermedia</button>
-          <button id="layer-prof" onclick="setLayer('profunda')" class="py-1 rounded text-slate-400 hover:text-white font-medium">Profunda</button>
+      <!-- SELECTOR DE ESTRATO & REPAROS ÓSEOS -->
+      <div class="p-4 border-b border-slate-800 space-y-3">
+        <div>
+          <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">Estrato Activo</label>
+          <div class="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-center text-xs">
+            <button id="layer-sup" onclick="setLayer('superficial')" class="py-1 rounded bg-medical-700 text-white font-medium shadow-sm">Superficial</button>
+            <button id="layer-med" onclick="setLayer('intermedia')" class="py-1 rounded text-slate-400 hover:text-white font-medium">Intermedia</button>
+            <button id="layer-prof" onclick="setLayer('profunda')" class="py-1 rounded text-slate-400 hover:text-white font-medium">Profunda</button>
+          </div>
         </div>
-        
-        <!-- REPAROS ÓSEOS PALPABLES -->
-        <div class="mt-3 flex items-center justify-between bg-slate-950/60 p-2 rounded-lg border border-slate-800/80">
+
+        <div class="flex items-center justify-between bg-slate-950/60 p-2 rounded-lg border border-slate-800/80">
           <span class="text-[11px] text-slate-300 flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-sky-400"></span>
             Reparos Óseos Palpables
@@ -151,117 +161,134 @@
         </div>
       </div>
 
-      <!-- LISTA DE MOTIVOS DE CONSULTA CLÍNICA -->
+      <!-- LEYENDA CLÍNICA INTEGRADA EN LA BARRA LATERAL (SIN TAPAR EL CUERPO) -->
+      <div class="p-3.5 border-b border-slate-800 bg-slate-950/60 text-xs space-y-2">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Convenciones Anatómicas</span>
+        <div class="grid grid-cols-2 gap-2 text-[11px]">
+          <div class="flex items-center gap-1.5">
+            <span class="w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center text-[9px] font-black text-white shrink-0">✕</span>
+            <span class="text-slate-300 truncate">Punto Gatillo</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-3.5 h-2 rounded bg-red-500/70 border border-red-500 shrink-0"></span>
+            <span class="text-slate-300 truncate">Dolor Primario</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-3.5 h-2 rounded bg-amber-500/50 border border-amber-500 shrink-0"></span>
+            <span class="text-slate-300 truncate">Dolor Satélite</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-3.5 h-0.5 border-b border-dashed border-sky-400 shrink-0"></span>
+            <span class="text-sky-300 truncate">Hueso Palpable</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- LISTA DE PATOLOGÍAS Y MÚSCULOS -->
       <div class="flex-1 overflow-y-auto p-4 space-y-4">
         <div>
           <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center justify-between">
-            <span>Síntomas / Dolor Referido</span>
-            <span class="text-[9px] text-medical-400 bg-medical-500/10 px-1.5 py-0.5 rounded">Frecuente</span>
+            <span>Motivos de Consulta Frecuentes</span>
+            <span class="text-[9px] text-medical-400 bg-medical-500/10 px-1.5 py-0.5 rounded">Filtro</span>
           </h3>
           <div class="space-y-1" id="symptom-list"></div>
         </div>
 
         <div>
-          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Catálogo Muscular Completo</h3>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Catálogo Muscular Calibrado</h3>
           <div class="space-y-1" id="muscle-catalog"></div>
         </div>
       </div>
     </aside>
 
-    <!-- PANEL CENTRAL: LIENZO FOTOGRÁFICO CLÍNICO CON TRANSLUCIDEZ DE CAPAS PROFUNDAS -->
-    <main class="flex-1 bg-slate-950 relative flex items-center justify-center overflow-hidden p-4">
+    <!-- PANEL CENTRAL: LIENZO FOTOGRÁFICO DE ALTA DEFINICIÓN (100% LIMPIO Y SIN OBSTRUCCIONES) -->
+    <main class="flex-1 bg-slate-950 relative flex items-center justify-center overflow-hidden">
       
-      <!-- LEYENDA CLÍNICA -->
-      <div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
-        <div class="bg-slate-900/90 backdrop-blur border border-slate-800 rounded-xl p-3 shadow-2xl text-xs space-y-1.5">
-          <div class="flex items-center gap-2">
-            <span class="w-4 h-4 rounded-full bg-red-500 flex items-center justify-center text-[10px] font-black text-white shadow-lg shadow-red-500/80 animate-pulse">✕</span>
-            <span class="text-slate-200 font-semibold">Punto Gatillo (Trigger Point)</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="w-4 h-2.5 rounded bg-red-500/60 border border-red-500"></span>
-            <span class="text-slate-300">Dolor Primario Esencial (Travell)</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="w-4 h-2.5 rounded bg-amber-500/50 border border-amber-500"></span>
-            <span class="text-slate-300">Dolor Satélite / Desbordamiento</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="w-4 h-0.5 border-b-2 border-dashed border-sky-400"></span>
-            <span class="text-sky-300 text-[11px]">Reparos Óseos para Palpación</span>
-          </div>
-        </div>
-
-        <div id="active-context-pill" class="bg-medical-950/95 border border-medical-500/50 text-medical-200 px-3.5 py-2 rounded-xl text-xs shadow-2xl flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
-          <span id="active-context-text" class="font-semibold">Trapecio (Fibras Superiores)</span>
-        </div>
-      </div>
-
-      <!-- CONTENEDOR FOTOGRÁFICO DE ALTA DEFINICIÓN (655 x 1024 EXACTO) -->
-      <div class="relative h-full max-h-[920px] aspect-[655/1024] flex items-center justify-center rounded-2xl overflow-hidden shadow-2xl border border-slate-800/80 bg-black">
+      <!-- VISOR PAN & ZOOM INTERACTIVO -->
+      <div id="viewport-container" class="relative w-full h-full flex items-center justify-center overflow-hidden">
         
-        <!-- 1. FOTOGRAFÍA CLÍNICA REAL DE SUPERFICIE -->
-        <img id="photo-surface" src="assets/images/female_posterior.jpg" alt="Fotografía Anatómica Femenina Posterior" 
-             class="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 z-0">
-
-        <!-- 2. CAPA DE DISECCIÓN PROFUNDA FOTORREALISTA (Músculos profundos, fascias y esqueleto) -->
-        <svg id="deep-dissection-svg" viewBox="0 0 655 1024" class="absolute inset-0 w-full h-full pointer-events-none z-10 transition-opacity duration-300 opacity-50">
-          <defs>
-            <!-- Texturas musculares fotorrealistas de grado médico -->
-            <linearGradient id="muscle-fiber-dark" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#7f1d1d" stop-opacity="0.9" />
-              <stop offset="50%" stop-color="#991b1b" stop-opacity="0.85" />
-              <stop offset="100%" stop-color="#450a0a" stop-opacity="0.95" />
-            </linearGradient>
-            <linearGradient id="fascia-silver" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#94a3b8" stop-opacity="0.5" />
-              <stop offset="50%" stop-color="#e2e8f0" stop-opacity="0.8" />
-              <stop offset="100%" stop-color="#64748b" stop-opacity="0.5" />
-            </linearGradient>
-            <!-- Filtro de relieve esquelético 3D -->
-            <filter id="bone-relief">
-              <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000" flood-opacity="0.8"/>
-            </filter>
-          </defs>
-
-          <!-- GRUPO DINÁMICO DE PLANOS PROFUNDOS -->
-          <g id="deep-muscles-art"></g>
+        <div id="transform-wrapper" class="relative transition-transform duration-75 origin-center will-change-transform" style="transform: scale(1) translate(0px, 0px);">
           
-          <!-- REPAROS ÓSEOS PALPABLES (LANDMARKS) -->
-          <g id="bony-landmarks-group"></g>
-        </svg>
+          <!-- CONTENEDOR PROPORCIONADO A 655 x 1024 -->
+          <div class="relative w-[520px] h-[813px] rounded-2xl overflow-hidden shadow-2xl border border-slate-800/80 bg-black">
+            
+            <!-- 1. FOTOGRAFÍA CLÍNICA REAL DE SUPERFICIE -->
+            <img id="photo-surface" src="assets/images/female_posterior.jpg" alt="Fotografía Anatómica Real" 
+                 class="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 z-0 select-none pointer-events-none">
 
-        <!-- 3. CAPA DE MAPEO TÉRMICO DE DOLOR REFERIDO Y PUNTOS GATILLO -->
-        <svg id="interactive-overlay-svg" viewBox="0 0 655 1024" class="absolute inset-0 w-full h-full z-20 pointer-events-auto">
-          <defs>
-            <!-- Gradiente de dolor esencial primario (rojo de alta penetración) -->
-            <radialGradient id="pain-primary-radial" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="rgba(239, 68, 68, 0.95)" />
-              <stop offset="45%" stop-color="rgba(239, 68, 68, 0.65)" />
-              <stop offset="75%" stop-color="rgba(239, 68, 68, 0.25)" />
-              <stop offset="100%" stop-color="rgba(239, 68, 68, 0)" />
-            </radialGradient>
-            <!-- Gradiente de dolor secundario satélite (ámbar/naranja) -->
-            <radialGradient id="pain-secondary-radial" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="rgba(245, 158, 11, 0.9)" />
-              <stop offset="55%" stop-color="rgba(245, 158, 11, 0.5)" />
-              <stop offset="100%" stop-color="rgba(245, 158, 11, 0)" />
-            </radialGradient>
-          </defs>
+            <!-- 2. CAPA DE DISECCIÓN VECTORIAL PROFUNDA (MÚSCULOS PROFUNDOS Y PLANO ÓSEO) -->
+            <svg id="deep-dissection-svg" viewBox="0 0 655 1024" class="absolute inset-0 w-full h-full pointer-events-none z-10 transition-opacity duration-300 opacity-50">
+              <defs>
+                <linearGradient id="muscle-fiber-dark" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#991b1b" stop-opacity="0.9" />
+                  <stop offset="50%" stop-color="#b91c1c" stop-opacity="0.8" />
+                  <stop offset="100%" stop-color="#450a0a" stop-opacity="0.95" />
+                </linearGradient>
+                <filter id="anatomical-glow">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
 
-          <!-- DOLOR REFERIDO -->
-          <g id="pain-radiation-layer"></g>
+              <!-- Músculos dibujados según la morfología exacta de la persona -->
+              <g id="deep-muscles-art"></g>
+              
+              <!-- Reparos óseos palpables calibrados -->
+              <g id="bony-landmarks-group"></g>
+            </svg>
 
-          <!-- PUNTOS GATILLO "✕" -->
-          <g id="trigger-points-layer"></g>
-        </svg>
+            <!-- 3. CAPA DE MAPEO TÉRMICO Y PUNTOS GATILLO CALIBRADOS -->
+            <svg id="interactive-overlay-svg" viewBox="0 0 655 1024" class="absolute inset-0 w-full h-full z-20 pointer-events-auto">
+              <defs>
+                <radialGradient id="pain-primary-radial" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="rgba(239, 68, 68, 0.95)" />
+                  <stop offset="45%" stop-color="rgba(239, 68, 68, 0.6)" />
+                  <stop offset="80%" stop-color="rgba(239, 68, 68, 0.2)" />
+                  <stop offset="100%" stop-color="rgba(239, 68, 68, 0)" />
+                </radialGradient>
+                <radialGradient id="pain-secondary-radial" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="rgba(245, 158, 11, 0.9)" />
+                  <stop offset="55%" stop-color="rgba(245, 158, 11, 0.45)" />
+                  <stop offset="100%" stop-color="rgba(245, 158, 11, 0)" />
+                </radialGradient>
+              </defs>
 
+              <g id="pain-radiation-layer"></g>
+              <g id="trigger-points-layer"></g>
+            </svg>
+
+          </div>
+        </div>
       </div>
+
+      <!-- BARRA FLOTANTE DE CONTROL DE VISTA (HUD INFERIOR - NO OBSTRUYE AL MODELO) -->
+      <div class="absolute bottom-5 z-20 flex items-center gap-2 bg-slate-900/90 backdrop-blur border border-slate-800 px-3 py-1.5 rounded-xl shadow-2xl text-xs">
+        
+        <span id="active-badge" class="font-semibold text-medical-300 pr-2 border-r border-slate-800 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+          <span id="active-context-title">Trapecio (Fibras Superiores)</span>
+        </span>
+
+        <button onclick="zoomIn()" class="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white" title="Acercar (+)">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+        </button>
+        <span id="zoom-level-label" class="text-[11px] font-mono text-slate-400 min-w-[38px] text-center">100%</span>
+        <button onclick="zoomOut()" class="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white" title="Alejar (-)">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 12H4"/></svg>
+        </button>
+        
+        <div class="h-4 w-px bg-slate-800"></div>
+
+        <button onclick="resetZoomPan()" class="px-2 py-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white text-[11px] flex items-center gap-1" title="Restablecer posición y zoom">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Centrar
+        </button>
+      </div>
+
     </main>
 
-    <!-- PANEL DERECHO: PROTOCOLO CLÍNICO & OSTEOPÁTICO -->
-    <aside class="w-96 border-l border-slate-800 bg-slate-900/80 backdrop-blur flex flex-col shrink-0 overflow-y-auto">
+    <!-- PANEL LATERAL DERECHO: PROTOCOLO CLÍNICO & OSTEOPÁTICO -->
+    <aside class="w-96 border-l border-slate-800 bg-slate-900/80 backdrop-blur flex flex-col shrink-0 overflow-y-auto z-20">
       
       <!-- CABECERA DE LA FICHA -->
       <div class="p-5 border-b border-slate-800 bg-slate-900 sticky top-0 z-10 shadow-sm">
@@ -368,10 +395,84 @@
 
   </div>
 
-  <!-- BASE DE DATOS MÉDICA CALIBRADA A LAS FOTOGRAFÍAS REALES (655 x 1024) -->
+  <!-- MOTOR DE CALIBRACIÓN ANATÓMICA Y COORDENADAS ADAPTATIVAS POR MODELO -->
   <script>
-    const CLINICAL_DATA = {
-      // POSTERIOR
+    // MATRIZ DE REPAROS ÓSEOS REALES MEDIDOS EN CADA FOTO (655 x 1024)
+    const ANATOMICAL_LANDMARKS = {
+      female_posterior: {
+        midlineX: 328,
+        c7: { x: 328, y: 145, label: 'C7' },
+        acromionLeft: { x: 212, y: 182, label: 'Acromion Izq' },
+        acromionRight: { x: 446, y: 182, label: 'Acromion Der' },
+        scapulaSpineLeft: "M 212 182 Q 260 200 295 208",
+        scapulaSpineRight: "M 446 182 Q 396 200 361 208",
+        scapulaInferiorLeft: { x: 280, y: 280, label: 'T7' },
+        scapulaInferiorRight: { x: 376, y: 280, label: 'T7' },
+        t12: { x: 328, y: 340, label: 'T12' },
+        iliacCrestLeft: { x: 250, y: 395 },
+        iliacCrestRight: { x: 406, y: 395 },
+        eipsLeft: { x: 308, y: 435, label: 'EIPS' },
+        eipsRight: { x: 348, y: 435, label: 'EIPS' },
+        sacrumCenter: { x: 328, y: 445 },
+        trochanterLeft: { x: 215, y: 490, label: 'Trocánter' },
+        trochanterRight: { x: 440, y: 490, label: 'Trocánter' },
+        poplitealLeft: { x: 282, y: 685, label: 'Fosa Poplítea' },
+        poplitealRight: { x: 374, y: 685, label: 'Fosa Poplítea' },
+        malleolusLeft: { x: 280, y: 890 },
+        malleolusRight: { x: 376, y: 890 }
+      },
+      male_posterior: {
+        midlineX: 328,
+        c7: { x: 328, y: 155, label: 'C7' },
+        acromionLeft: { x: 198, y: 205, label: 'Acromion Izq' },
+        acromionRight: { x: 458, y: 205, label: 'Acromion Der' },
+        scapulaSpineLeft: "M 198 205 Q 250 220 290 230",
+        scapulaSpineRight: "M 458 205 Q 406 220 366 230",
+        scapulaInferiorLeft: { x: 275, y: 305, label: 'T7' },
+        scapulaInferiorRight: { x: 380, y: 305, label: 'T7' },
+        t12: { x: 328, y: 360, label: 'T12' },
+        iliacCrestLeft: { x: 260, y: 420 },
+        iliacCrestRight: { x: 395, y: 420 },
+        eipsLeft: { x: 308, y: 450, label: 'EIPS' },
+        eipsRight: { x: 348, y: 450, label: 'EIPS' },
+        sacrumCenter: { x: 328, y: 460 },
+        trochanterLeft: { x: 228, y: 510, label: 'Trocánter' },
+        trochanterRight: { x: 428, y: 510, label: 'Trocánter' },
+        poplitealLeft: { x: 285, y: 700, label: 'Fosa Poplítea' },
+        poplitealRight: { x: 372, y: 700, label: 'Fosa Poplítea' },
+        malleolusLeft: { x: 282, y: 905 },
+        malleolusRight: { x: 374, y: 905 }
+      },
+      female_anterior: {
+        midlineX: 330,
+        sternalNotch: { x: 330, y: 175, label: 'Horquilla Esternal' },
+        clavicleLeft: "M 330 175 Q 275 178 220 185",
+        clavicleRight: "M 330 175 Q 385 178 440 185",
+        acromionLeft: { x: 220, y: 185 },
+        acromionRight: { x: 440, y: 185 },
+        eiasLeft: { x: 255, y: 445, label: 'EIAS' },
+        eiasRight: { x: 405, y: 445, label: 'EIAS' },
+        pubis: { x: 330, y: 490 },
+        patellaLeft: { x: 285, y: 690, label: 'Rótula' },
+        patellaRight: { x: 375, y: 690, label: 'Rótula' }
+      },
+      male_anterior: {
+        midlineX: 328,
+        sternalNotch: { x: 328, y: 185, label: 'Horquilla Esternal' },
+        clavicleLeft: "M 328 185 Q 265 190 205 205",
+        clavicleRight: "M 328 185 Q 390 190 450 205",
+        acromionLeft: { x: 205, y: 205 },
+        acromionRight: { x: 450, y: 205 },
+        eiasLeft: { x: 260, y: 465, label: 'EIAS' },
+        eiasRight: { x: 395, y: 465, label: 'EIAS' },
+        pubis: { x: 328, y: 520 },
+        patellaLeft: { x: 280, y: 705, label: 'Rótula' },
+        patellaRight: { x: 376, y: 705, label: 'Rótula' }
+      }
+    };
+
+    // BASE DE DATOS CLÍNICA GENERAL
+    const CLINICAL_CATALOG = {
       trapezius: {
         id: 'trapezius',
         name: 'Trapecio (Fibras Superiores)',
@@ -389,25 +490,7 @@
         comp: 'Presión digital constante (60-90s) hasta ceder la resistencia tisular.',
         met: 'Inclinación lateral contralateral con flexión leve. Contracción isométrica de 7s hacia el hombro.',
         fascia: 'Trazos en J y elongación longitudinal fascial del borde cervicooccipital.',
-        precautions: 'No comprimir el triángulo carotídeo en abordajes anterolaterales.',
-        // Coordenadas calibradas a la foto 655x1024
-        points: [
-          { x: 295, y: 185, label: 'PG1' },
-          { x: 360, y: 185, label: 'PG1' },
-          { x: 280, y: 220, label: 'PG2' },
-          { x: 375, y: 220, label: 'PG2' }
-        ],
-        painRadiations: [
-          { cx: 295, cy: 125, rx: 28, ry: 45, type: 'primary' },
-          { cx: 360, cy: 125, rx: 28, ry: 45, type: 'primary' },
-          { cx: 327, cy: 80, rx: 40, ry: 35, type: 'secondary' },
-          { cx: 255, cy: 185, rx: 25, ry: 25, type: 'primary' },
-          { cx: 400, cy: 185, rx: 25, ry: 25, type: 'primary' }
-        ],
-        deepMusclesPath: `
-          <!-- Músculo Trapecio Superficial / Disección -->
-          <path d="M 327 125 L 375 180 L 405 210 L 370 270 L 327 340 L 285 270 L 250 210 L 280 180 Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.5" opacity="0.75"/>
-        `
+        precautions: 'No comprimir el triángulo carotídeo en abordajes anterolaterales.'
       },
       levator: {
         id: 'levator',
@@ -426,21 +509,7 @@
         comp: 'Presión con pulgar sostenida en decúbito prono con brazo en rotación interna.',
         met: 'Flexión con rotación de 45° contralateral. Resistencia isométrica hacia extensión.',
         fascia: 'Despegamiento miofascial del surco interescapulovertebral.',
-        precautions: 'Cuidado con la arteria cervical transversa profunda.',
-        points: [
-          { x: 305, y: 198, label: 'PG1' },
-          { x: 350, y: 198, label: 'PG1' }
-        ],
-        painRadiations: [
-          { cx: 300, cy: 220, rx: 22, ry: 35, type: 'primary' },
-          { cx: 355, cy: 220, rx: 22, ry: 35, type: 'primary' },
-          { cx: 327, cy: 160, rx: 25, ry: 30, type: 'secondary' }
-        ],
-        deepMusclesPath: `
-          <!-- Elevador de la escápula -->
-          <path d="M 318 150 L 305 215 L 295 210 L 312 148 Z" fill="url(#muscle-fiber-dark)" stroke="#0ea5e9" stroke-width="1.5" opacity="0.85"/>
-          <path d="M 336 150 L 350 215 L 360 210 L 342 148 Z" fill="url(#muscle-fiber-dark)" stroke="#0ea5e9" stroke-width="1.5" opacity="0.85"/>
-        `
+        precautions: 'Cuidado con la arteria cervical transversa profunda.'
       },
       infraspinatus: {
         id: 'infraspinatus',
@@ -459,24 +528,7 @@
         comp: 'Presión firme con eminencia tenar o pulgares reforzados en decúbito lateral.',
         met: 'Rotación externa con resistencia isométrica suave.',
         fascia: 'Movilización de la fascia aponeurótica densa de la fosa.',
-        precautions: 'Diferenciar de rotura parcial del manguito de los rotadores.',
-        points: [
-          { x: 265, y: 245, label: 'PG1' },
-          { x: 390, y: 245, label: 'PG1' },
-          { x: 250, y: 265, label: 'PG2' },
-          { x: 405, y: 265, label: 'PG2' }
-        ],
-        painRadiations: [
-          { cx: 215, cy: 245, rx: 25, ry: 35, type: 'primary' },
-          { cx: 440, cy: 245, rx: 25, ry: 35, type: 'primary' },
-          { cx: 200, cy: 310, rx: 20, ry: 50, type: 'secondary' },
-          { cx: 455, cy: 310, rx: 20, ry: 50, type: 'secondary' }
-        ],
-        deepMusclesPath: `
-          <!-- Fosa Infraespinosa -->
-          <path d="M 245 220 L 290 230 L 275 285 L 240 260 Z" fill="url(#muscle-fiber-dark)" stroke="#38bdf8" stroke-width="1.5" opacity="0.8"/>
-          <path d="M 410 220 L 365 230 L 380 285 L 415 260 Z" fill="url(#muscle-fiber-dark)" stroke="#38bdf8" stroke-width="1.5" opacity="0.8"/>
-        `
+        precautions: 'Diferenciar de rotura parcial del manguito de los rotadores.'
       },
       quadratus: {
         id: 'quadratus',
@@ -495,23 +547,7 @@
         comp: 'Presión oblicua anterior con pulgares superpuestos durante 90 segundos.',
         met: 'Lifting pélvico con estiramiento lateral progresivo.',
         fascia: 'Descompresión de la fascia toracolumbar media y profunda.',
-        precautions: 'Evitar sobrepresión renal en el ángulo costo-vertebral.',
-        points: [
-          { x: 295, y: 385, label: 'PG1' },
-          { x: 360, y: 385, label: 'PG1' },
-          { x: 290, y: 410, label: 'PG2' },
-          { x: 365, y: 410, label: 'PG2' }
-        ],
-        painRadiations: [
-          { cx: 295, cy: 440, rx: 30, ry: 35, type: 'primary' },
-          { cx: 360, cy: 440, rx: 30, ry: 35, type: 'primary' },
-          { cx: 327, cy: 445, rx: 45, ry: 30, type: 'secondary' }
-        ],
-        deepMusclesPath: `
-          <!-- Cuadrado Lumbar Profundo -->
-          <rect x="280" y="370" width="30" height="50" rx="6" fill="url(#muscle-fiber-dark)" stroke="#e11d48" stroke-width="1.5" opacity="0.85"/>
-          <rect x="345" y="370" width="30" height="50" rx="6" fill="url(#muscle-fiber-dark)" stroke="#e11d48" stroke-width="1.5" opacity="0.85"/>
-        `
+        precautions: 'Evitar sobrepresión renal en el ángulo costo-vertebral.'
       },
       piriformis: {
         id: 'piriformis',
@@ -530,22 +566,7 @@
         comp: 'Presión con el codo o los pulgares reforzados perpendicularmente al trocánter.',
         met: 'Flexión de cadera a 60° con aducción y rotación interna pasiva mantenida.',
         fascia: 'Liberación de la fascia glútea profunda y retináculo peripiriforme.',
-        precautions: 'El nervio ciático transcurre inmediatamente por debajo del vientre muscular.',
-        points: [
-          { x: 290, y: 475, label: 'PG1' },
-          { x: 365, y: 475, label: 'PG1' }
-        ],
-        painRadiations: [
-          { cx: 285, cy: 495, rx: 32, ry: 40, type: 'primary' },
-          { cx: 370, cy: 495, rx: 32, ry: 40, type: 'primary' },
-          { cx: 275, cy: 590, rx: 25, ry: 65, type: 'secondary' },
-          { cx: 380, cy: 590, rx: 25, ry: 65, type: 'secondary' }
-        ],
-        deepMusclesPath: `
-          <!-- Músculo Piriforme Profundo -->
-          <path d="M 320 460 L 260 480 L 265 490 L 320 470 Z" fill="url(#muscle-fiber-dark)" stroke="#f43f5e" stroke-width="1.5" opacity="0.9"/>
-          <path d="M 335 460 L 395 480 L 390 490 L 335 470 Z" fill="url(#muscle-fiber-dark)" stroke="#f43f5e" stroke-width="1.5" opacity="0.9"/>
-        `
+        precautions: 'El nervio ciático transcurre inmediatamente por debajo del vientre muscular.'
       },
       gluteus_medius: {
         id: 'gluteus_medius',
@@ -564,24 +585,7 @@
         comp: 'Presión perpendicular con pulgar reforzado.',
         met: 'Aducción de cadera por debajo de la línea media en decúbito lateral.',
         fascia: 'Liberación de los tabiques interfasciales con el tensor de la fascia lata.',
-        precautions: 'Descartar bursitis trocantérea concomitante.',
-        points: [
-          { x: 255, y: 440, label: 'PG1' },
-          { x: 400, y: 440, label: 'PG1' },
-          { x: 245, y: 455, label: 'PG2' },
-          { x: 410, y: 455, label: 'PG2' }
-        ],
-        painRadiations: [
-          { cx: 250, cy: 465, rx: 28, ry: 35, type: 'primary' },
-          { cx: 405, cy: 465, rx: 28, ry: 35, type: 'primary' },
-          { cx: 240, cy: 535, rx: 20, ry: 45, type: 'secondary' },
-          { cx: 415, cy: 535, rx: 20, ry: 45, type: 'secondary' }
-        ],
-        deepMusclesPath: `
-          <!-- Glúteo Medio -->
-          <path d="M 235 425 C 265 420, 295 435, 290 460 C 275 480, 245 470, 235 425 Z" fill="url(#muscle-fiber-dark)" stroke="#38bdf8" stroke-width="1.5" opacity="0.8"/>
-          <path d="M 420 425 C 390 420, 360 435, 365 460 C 380 480, 410 470, 420 425 Z" fill="url(#muscle-fiber-dark)" stroke="#38bdf8" stroke-width="1.5" opacity="0.8"/>
-        `
+        precautions: 'Descartar bursitis trocantérea concomitante.'
       },
       gastrocnemius: {
         id: 'gastrocnemius',
@@ -600,27 +604,8 @@
         comp: 'Presión en pinza progresiva (60-90s) con paciente en decúbito prono.',
         met: 'Dorsiflexión pasiva con rodilla extendida contra resistencia de 7 segundos.',
         fascia: 'Estiramiento del tendón de Aquiles y despegamiento fascial de los gemelos.',
-        precautions: 'Descartar SIEMPRE Trombosis Venosa Profunda (TVP) ante dolor agudo en pantorrilla (Signo de Homans).',
-        points: [
-          { x: 275, y: 745, label: 'PG1' },
-          { x: 380, y: 745, label: 'PG1' },
-          { x: 295, y: 780, label: 'PG2' },
-          { x: 360, y: 780, label: 'PG2' }
-        ],
-        painRadiations: [
-          { cx: 280, cy: 770, rx: 25, ry: 50, type: 'primary' },
-          { cx: 375, cy: 770, rx: 25, ry: 50, type: 'primary' },
-          { cx: 290, cy: 910, rx: 18, ry: 30, type: 'secondary' },
-          { cx: 365, cy: 910, rx: 18, ry: 30, type: 'secondary' }
-        ],
-        deepMusclesPath: `
-          <!-- Gemelos / Sóleo -->
-          <path d="M 260 710 C 290 715, 305 745, 290 820 L 270 820 C 255 770, 250 730, 260 710 Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.5" opacity="0.8"/>
-          <path d="M 395 710 C 365 715, 350 745, 365 820 L 385 820 C 400 770, 405 730, 395 710 Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.5" opacity="0.8"/>
-        `
+        precautions: 'Descartar SIEMPRE Trombosis Venosa Profunda (TVP) ante dolor agudo en pantorrilla (Signo de Homans).'
       },
-
-      // ANTERIOR
       sternocleidomastoid: {
         id: 'sternocleidomastoid',
         name: 'Esternocleidomastoideo (ECM)',
@@ -638,23 +623,7 @@
         comp: 'Presión en pinza suave durante 60 segundos manteniendo ligera rotación.',
         met: 'Extensión suave con rotación homolateral e inclinación contralateral.',
         fascia: 'Trazos longitudinales de la fascia cervical superficial.',
-        precautions: 'Peligro con el seno carotídeo. No masajear bilateralmente a la vez.',
-        points: [
-          { x: 305, y: 165, label: 'PG1' },
-          { x: 350, y: 165, label: 'PG1' },
-          { x: 295, y: 185, label: 'PG2' },
-          { x: 360, y: 185, label: 'PG2' }
-        ],
-        painRadiations: [
-          { cx: 327, cy: 65, rx: 35, ry: 20, type: 'primary' },
-          { cx: 290, cy: 110, rx: 25, ry: 30, type: 'primary' },
-          { cx: 365, cy: 110, rx: 25, ry: 30, type: 'primary' }
-        ],
-        deepMusclesPath: `
-          <!-- ECM -->
-          <path d="M 290 140 L 315 200 L 305 202 L 282 142 Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.5" opacity="0.85"/>
-          <path d="M 365 140 L 340 200 L 350 202 L 373 142 Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.5" opacity="0.85"/>
-        `
+        precautions: 'Peligro con el seno carotídeo. No masajear bilateralmente a la vez.'
       },
       pectoralis_major: {
         id: 'pectoralis_major',
@@ -673,26 +642,262 @@
         comp: 'Presión en pinza progresiva con el brazo en abducción a 90°.',
         met: 'Abducción horizontal pasiva del brazo con contracción isométrica hacia la aducción.',
         fascia: 'Descompresión fascial de la fascia pectoral y clavipectoral.',
-        precautions: 'Descartar SIEMPRE patología cardíaca aguda ante dolor en hemitórax izquierdo.',
-        points: [
-          { x: 265, y: 270, label: 'PG1' },
-          { x: 390, y: 270, label: 'PG1' },
-          { x: 290, y: 295, label: 'PG2' },
-          { x: 365, y: 295, label: 'PG2' }
-        ],
-        painRadiations: [
-          { cx: 280, cy: 280, rx: 35, ry: 35, type: 'primary' },
-          { cx: 375, cy: 280, rx: 35, ry: 35, type: 'primary' },
-          { cx: 200, cy: 330, rx: 20, ry: 50, type: 'secondary' },
-          { cx: 455, cy: 330, rx: 20, ry: 50, type: 'secondary' }
-        ],
-        deepMusclesPath: `
-          <!-- Pectoral Mayor -->
-          <path d="M 320 230 C 270 240, 240 260, 230 280 C 250 310, 310 310, 320 280 Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.5" opacity="0.8"/>
-          <path d="M 335 230 C 385 240, 415 260, 425 280 C 405 310, 345 310, 335 280 Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.5" opacity="0.8"/>
-        `
+        precautions: 'Descartar SIEMPRE patología cardíaca aguda ante dolor en hemitórax izquierdo.'
       }
     };
+
+    // GENERADOR ADAPTATIVO: CALIBRA VECTORES SEGÚN EL MODELO REAL SELECCIONADO
+    function getModelCalibratedMuscle(key, gender, view) {
+      const isMale = (gender === 'male');
+      const lm = ANATOMICAL_LANDMARKS[`${gender}_${view}`];
+      if (!lm) return null;
+
+      if (view === 'posterior') {
+        if (key === 'trapezius') {
+          const c7 = lm.c7;
+          const acrL = lm.acromionLeft;
+          const acrR = lm.acromionRight;
+          const t12 = lm.t12;
+
+          return {
+            points: [
+              { x: Math.round((c7.x + acrL.x) / 2 + 5), y: Math.round((c7.y + acrL.y) / 2 - 2), label: 'PG1' },
+              { x: Math.round((c7.x + acrR.x) / 2 - 5), y: Math.round((c7.y + acrR.y) / 2 - 2), label: 'PG1' },
+              { x: Math.round((c7.x + acrL.x) / 2 - 15), y: Math.round((c7.y + acrL.y) / 2 + 25), label: 'PG2' },
+              { x: Math.round((c7.x + acrR.x) / 2 + 15), y: Math.round((c7.y + acrR.y) / 2 + 25), label: 'PG2' }
+            ],
+            painRadiations: [
+              { cx: Math.round((c7.x + acrL.x) / 2), cy: c7.y - 45, rx: 28, ry: 45, type: 'primary' },
+              { cx: Math.round((c7.x + acrR.x) / 2), cy: c7.y - 45, rx: 28, ry: 45, type: 'primary' },
+              { cx: lm.midlineX, cy: c7.y - 95, rx: 42, ry: 35, type: 'secondary' },
+              { cx: acrL.x + 25, cy: acrL.y + 5, rx: 25, ry: 25, type: 'primary' },
+              { cx: acrR.x - 25, cy: acrR.y + 5, rx: 25, ry: 25, type: 'primary' }
+            ],
+            // Curvas Bezier anatómicas que contornean el trapecio real del modelo
+            deepPath: `
+              <path d="M ${c7.x} ${c7.y - 40} 
+                       Q ${Math.round((c7.x + acrL.x) / 2)} ${acrL.y - 20} ${acrL.x + 10} ${acrL.y} 
+                       Q ${acrL.x + 25} ${acrL.y + 70} ${Math.round((c7.x + acrL.x) / 2)} ${acrL.y + 75}
+                       L ${t12.x} ${t12.y} 
+                       L ${Math.round((c7.x + acrR.x) / 2)} ${acrR.y + 75}
+                       Q ${acrR.x - 25} ${acrR.y + 70} ${acrR.x - 10} ${acrR.y}
+                       Q ${Math.round((c7.x + acrR.x) / 2)} ${acrR.y - 20} ${c7.x} ${c7.y - 40} Z" 
+                    fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.8" opacity="0.8" />
+            `
+          };
+        }
+
+        if (key === 'levator') {
+          const c7 = lm.c7;
+          const scapL = lm.scapulaInferiorLeft;
+          const scapR = lm.scapulaInferiorRight;
+          return {
+            points: [
+              { x: Math.round(c7.x - (isMale ? 32 : 28)), y: c7.y + (isMale ? 40 : 35), label: 'PG1' },
+              { x: Math.round(c7.x + (isMale ? 32 : 28)), y: c7.y + (isMale ? 40 : 35), label: 'PG1' }
+            ],
+            painRadiations: [
+              { cx: c7.x - 28, cy: c7.y + 55, rx: 22, ry: 35, type: 'primary' },
+              { cx: c7.x + 28, cy: c7.y + 55, rx: 22, ry: 35, type: 'primary' },
+              { cx: lm.midlineX, cy: c7.y, rx: 25, ry: 30, type: 'secondary' }
+            ],
+            deepPath: `
+              <path d="M ${c7.x - 12} ${c7.y - 10} Q ${c7.x - 24} ${c7.y + 20} ${c7.x - 30} ${c7.y + 60} L ${c7.x - 42} ${c7.y + 56} Q ${c7.x - 28} ${c7.y + 15} ${c7.x - 20} ${c7.y - 12} Z" fill="url(#muscle-fiber-dark)" stroke="#0ea5e9" stroke-width="1.5" opacity="0.85"/>
+              <path d="M ${c7.x + 12} ${c7.y - 10} Q ${c7.x + 24} ${c7.y + 20} ${c7.x + 30} ${c7.y + 60} L ${c7.x + 42} ${c7.y + 56} Q ${c7.x + 28} ${c7.y + 15} ${c7.x + 20} ${c7.y - 12} Z" fill="url(#muscle-fiber-dark)" stroke="#0ea5e9" stroke-width="1.5" opacity="0.85"/>
+            `
+          };
+        }
+
+        if (key === 'infraspinatus') {
+          const scapL = lm.scapulaInferiorLeft;
+          const scapR = lm.scapulaInferiorRight;
+          const acrL = lm.acromionLeft;
+          const acrR = lm.acromionRight;
+
+          const fosaLX = Math.round((acrL.x + scapL.x) / 2);
+          const fosaRX = Math.round((acrR.x + scapR.x) / 2);
+          const fosaY = Math.round((acrL.y + scapL.y) / 2 + 10);
+
+          return {
+            points: [
+              { x: fosaLX, y: fosaY, label: 'PG1' },
+              { x: fosaRX, y: fosaY, label: 'PG1' },
+              { x: fosaLX - 15, y: fosaY + 20, label: 'PG2' },
+              { x: fosaRX + 15, y: fosaY + 20, label: 'PG2' }
+            ],
+            painRadiations: [
+              { cx: fosaLX - 35, cy: fosaY - 5, rx: 25, ry: 35, type: 'primary' },
+              { cx: fosaRX + 35, cy: fosaY - 5, rx: 25, ry: 35, type: 'primary' },
+              { cx: fosaLX - 45, cy: fosaY + 70, rx: 18, ry: 50, type: 'secondary' },
+              { cx: fosaRX + 45, cy: fosaY + 70, rx: 18, ry: 50, type: 'secondary' }
+            ],
+            deepPath: `
+              <path d="M ${acrL.x + 35} ${acrL.y + 20} L ${scapL.x + 10} ${scapL.y - 30} L ${scapL.x} ${scapL.y} L ${acrL.x + 25} ${scapL.y - 15} Z" fill="url(#muscle-fiber-dark)" stroke="#38bdf8" stroke-width="1.5" opacity="0.85"/>
+              <path d="M ${acrR.x - 35} ${acrR.y + 20} L ${scapR.x - 10} ${scapR.y - 30} L ${scapR.x} ${scapR.y} L ${acrR.x - 25} ${scapR.y - 15} Z" fill="url(#muscle-fiber-dark)" stroke="#38bdf8" stroke-width="1.5" opacity="0.85"/>
+            `
+          };
+        }
+
+        if (key === 'quadratus') {
+          const t12 = lm.t12;
+          const iliacL = lm.iliacCrestLeft;
+          const iliacR = lm.iliacCrestRight;
+          const yMid = Math.round((t12.y + iliacL.y) / 2);
+
+          return {
+            points: [
+              { x: Math.round((t12.x + iliacL.x) / 2), y: yMid - 5, label: 'PG1' },
+              { x: Math.round((t12.x + iliacR.x) / 2), y: yMid - 5, label: 'PG1' },
+              { x: Math.round((t12.x + iliacL.x) / 2 - 5), y: yMid + 20, label: 'PG2' },
+              { x: Math.round((t12.x + iliacR.x) / 2 + 5), y: yMid + 20, label: 'PG2' }
+            ],
+            painRadiations: [
+              { cx: Math.round((t12.x + iliacL.x) / 2), cy: iliacL.y + 30, rx: 30, ry: 35, type: 'primary' },
+              { cx: Math.round((t12.x + iliacR.x) / 2), cy: iliacR.y + 30, rx: 30, ry: 35, type: 'primary' },
+              { cx: lm.midlineX, cy: iliacL.y + 45, rx: 45, ry: 28, type: 'secondary' }
+            ],
+            deepPath: `
+              <rect x="${Math.round((t12.x + iliacL.x) / 2 - 16)}" y="${t12.y + 15}" width="34" height="${iliacL.y - t12.y}" rx="8" fill="url(#muscle-fiber-dark)" stroke="#e11d48" stroke-width="1.6" opacity="0.85"/>
+              <rect x="${Math.round((t12.x + iliacR.x) / 2 - 18)}" y="${t12.y + 15}" width="34" height="${iliacR.y - t12.y}" rx="8" fill="url(#muscle-fiber-dark)" stroke="#e11d48" stroke-width="1.6" opacity="0.85"/>
+            `
+          };
+        }
+
+        if (key === 'piriformis') {
+          const sacrum = lm.sacrumCenter;
+          const trocL = lm.trochanterLeft;
+          const trocR = lm.trochanterRight;
+
+          const pLX = Math.round((sacrum.x + trocL.x) / 2);
+          const pRX = Math.round((sacrum.x + trocR.x) / 2);
+          const pY = Math.round((sacrum.y + trocL.y) / 2);
+
+          return {
+            points: [
+              { x: pLX, y: pY, label: 'PG1' },
+              { x: pRX, y: pY, label: 'PG1' }
+            ],
+            painRadiations: [
+              { cx: pLX, cy: pY + 20, rx: 30, ry: 38, type: 'primary' },
+              { cx: pRX, cy: pY + 20, rx: 30, ry: 38, type: 'primary' },
+              { cx: pLX - 10, cy: pY + 95, rx: 24, ry: 60, type: 'secondary' },
+              { cx: pRX + 10, cy: pY + 95, rx: 24, ry: 60, type: 'secondary' }
+            ],
+            deepPath: `
+              <path d="M ${sacrum.x - 8} ${sacrum.y} L ${trocL.x + 10} ${trocL.y - 10} L ${trocL.x + 15} ${trocL.y + 12} L ${sacrum.x - 8} ${sacrum.y + 20} Z" fill="url(#muscle-fiber-dark)" stroke="#f43f5e" stroke-width="1.6" opacity="0.9"/>
+              <path d="M ${sacrum.x + 8} ${sacrum.y} L ${trocR.x - 10} ${trocR.y - 10} L ${trocR.x - 15} ${trocR.y + 12} L ${sacrum.x + 8} ${sacrum.y + 20} Z" fill="url(#muscle-fiber-dark)" stroke="#f43f5e" stroke-width="1.6" opacity="0.9"/>
+            `
+          };
+        }
+
+        if (key === 'gluteus_medius') {
+          const iliacL = lm.iliacCrestLeft;
+          const iliacR = lm.iliacCrestRight;
+          const trocL = lm.trochanterLeft;
+          const trocR = lm.trochanterRight;
+
+          return {
+            points: [
+              { x: Math.round((iliacL.x + trocL.x) / 2 + 5), y: iliacL.y + 35, label: 'PG1' },
+              { x: Math.round((iliacR.x + trocR.x) / 2 - 5), y: iliacR.y + 35, label: 'PG1' },
+              { x: Math.round((iliacL.x + trocL.x) / 2 - 10), y: iliacL.y + 55, label: 'PG2' },
+              { x: Math.round((iliacR.x + trocR.x) / 2 + 10), y: iliacR.y + 55, label: 'PG2' }
+            ],
+            painRadiations: [
+              { cx: Math.round((iliacL.x + trocL.x) / 2), cy: iliacL.y + 45, rx: 28, ry: 35, type: 'primary' },
+              { cx: Math.round((iliacR.x + trocR.x) / 2), cy: iliacR.y + 45, rx: 28, ry: 35, type: 'primary' },
+              { cx: trocL.x + 15, cy: trocL.y + 55, rx: 22, ry: 45, type: 'secondary' },
+              { cx: trocR.x - 15, cy: trocR.y + 55, rx: 22, ry: 45, type: 'secondary' }
+            ],
+            deepPath: `
+              <path d="M ${iliacL.x - 10} ${iliacL.y + 5} Q ${iliacL.x + 35} ${iliacL.y + 15} ${trocL.x + 55} ${iliacL.y + 55} L ${trocL.x + 10} ${trocL.y} Z" fill="url(#muscle-fiber-dark)" stroke="#38bdf8" stroke-width="1.6" opacity="0.85"/>
+              <path d="M ${iliacR.x + 10} ${iliacR.y + 5} Q ${iliacR.x - 35} ${iliacR.y + 15} ${trocR.x - 55} ${iliacR.y + 55} L ${trocR.x - 10} ${trocR.y} Z" fill="url(#muscle-fiber-dark)" stroke="#38bdf8" stroke-width="1.6" opacity="0.85"/>
+            `
+          };
+        }
+
+        if (key === 'gastrocnemius') {
+          const popL = lm.poplitealLeft;
+          const popR = lm.poplitealRight;
+          const malL = lm.malleolusLeft;
+          const malR = lm.malleolusRight;
+
+          const calfY = Math.round(popL.y + (malL.y - popL.y) * 0.32);
+
+          return {
+            points: [
+              { x: popL.x - 8, y: calfY, label: 'PG1' },
+              { x: popR.x + 8, y: calfY, label: 'PG1' },
+              { x: popL.x + 12, y: calfY + 30, label: 'PG2' },
+              { x: popR.x - 12, y: calfY + 30, label: 'PG2' }
+            ],
+            painRadiations: [
+              { cx: popL.x, cy: calfY + 15, rx: 25, ry: 50, type: 'primary' },
+              { cx: popR.x, cy: calfY + 15, rx: 25, ry: 50, type: 'primary' },
+              { cx: popL.x + 5, cy: malL.y + 20, rx: 18, ry: 25, type: 'secondary' },
+              { cx: popR.x - 5, cy: malR.y + 20, rx: 18, ry: 25, type: 'secondary' }
+            ],
+            deepPath: `
+              <path d="M ${popL.x - 25} ${popL.y} Q ${popL.x - 35} ${calfY + 20} ${popL.x - 8} ${calfY + 75} L ${popL.x + 15} ${calfY + 70} Q ${popL.x + 28} ${calfY + 20} ${popL.x + 20} ${popL.y} Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.6" opacity="0.85"/>
+              <path d="M ${popR.x + 25} ${popR.y} Q ${popR.x + 35} ${calfY + 20} ${popR.x + 8} ${calfY + 75} L ${popR.x - 15} ${calfY + 70} Q ${popR.x - 28} ${calfY + 20} ${popR.x - 20} ${popR.y} Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.6" opacity="0.85"/>
+            `
+          };
+        }
+      } else {
+        // VISTA ANTERIOR
+        if (key === 'sternocleidomastoid') {
+          const notch = lm.sternalNotch;
+          return {
+            points: [
+              { x: notch.x - 24, y: notch.y - 35, label: 'PG1' },
+              { x: notch.x + 24, y: notch.y - 35, label: 'PG1' },
+              { x: notch.x - 32, y: notch.y - 15, label: 'PG2' },
+              { x: notch.x + 32, y: notch.y - 15, label: 'PG2' }
+            ],
+            painRadiations: [
+              { cx: notch.x, cy: notch.y - 110, rx: 36, ry: 22, type: 'primary' },
+              { cx: notch.x - 38, cy: notch.y - 65, rx: 24, ry: 28, type: 'primary' },
+              { cx: notch.x + 38, cy: notch.y - 65, rx: 24, ry: 28, type: 'primary' }
+            ],
+            deepPath: `
+              <path d="M ${notch.x - 38} ${notch.y - 60} L ${notch.x - 8} ${notch.y} L ${notch.x - 18} ${notch.y + 4} L ${notch.x - 48} ${notch.y - 56} Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.6" opacity="0.9"/>
+              <path d="M ${notch.x + 38} ${notch.y - 60} L ${notch.x + 8} ${notch.y} L ${notch.x + 18} ${notch.y + 4} L ${notch.x + 48} ${notch.y - 56} Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.6" opacity="0.9"/>
+            `
+          };
+        }
+
+        if (key === 'pectoralis_major') {
+          const notch = lm.sternalNotch;
+          const acrL = lm.acromionLeft;
+          const acrR = lm.acromionRight;
+
+          const pectY = Math.round(notch.y + (isMale ? 75 : 65));
+          const pectLX = Math.round((notch.x + acrL.x) / 2);
+          const pectRX = Math.round((notch.x + acrR.x) / 2);
+
+          return {
+            points: [
+              { x: pectLX - 15, y: pectY, label: 'PG1' },
+              { x: pectRX + 15, y: pectY, label: 'PG1' },
+              { x: pectLX + 15, y: pectY + 25, label: 'PG2' },
+              { x: pectRX - 15, y: pectY + 25, label: 'PG2' }
+            ],
+            painRadiations: [
+              { cx: pectLX, cy: pectY + 10, rx: 36, ry: 35, type: 'primary' },
+              { cx: pectRX, cy: pectY + 10, rx: 36, ry: 35, type: 'primary' },
+              { cx: acrL.x - 15, cy: pectY + 70, rx: 20, ry: 50, type: 'secondary' },
+              { cx: acrR.x + 15, cy: pectY + 70, rx: 20, ry: 50, type: 'secondary' }
+            ],
+            deepPath: `
+              <path d="M ${notch.x - 5} ${notch.y + 10} Q ${pectLX} ${notch.y} ${acrL.x + 20} ${acrL.y + 40} Q ${pectLX - 20} ${pectY + 50} ${notch.x - 5} ${pectY + 40} Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.6" opacity="0.85"/>
+              <path d="M ${notch.x + 5} ${notch.y + 10} Q ${pectRX} ${notch.y} ${acrR.x - 20} ${acrR.y + 40} Q ${pectRX + 20} ${pectY + 50} ${notch.x + 5} ${pectY + 40} Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.6" opacity="0.85"/>
+            `
+          };
+        }
+      }
+
+      return null;
+    }
 
     let currentGender = 'female';
     let currentView = 'posterior';
@@ -700,7 +905,14 @@
     let activeMuscleKey = 'trapezius';
     let showBonyLandmarks = true;
 
-    // IMÁGENES FOTOGRÁFICAS REALES DE ESTUDIO
+    // Control de Zoom y Pan interactivo
+    let zoomScale = 1;
+    let panX = 0;
+    let panY = 0;
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+
     const PHOTO_ASSETS = {
       female_posterior: 'assets/images/female_posterior.jpg',
       female_anterior: 'assets/images/female_anterior.jpg',
@@ -713,6 +925,7 @@
       renderMuscleCatalog();
       selectMuscle('trapezius');
       updatePhotoSource();
+      setupPanZoom();
     }
 
     function setGender(gender) {
@@ -736,10 +949,9 @@
         ? 'px-3 py-1 rounded-lg text-xs font-semibold transition bg-slate-800 text-white'
         : 'px-3 py-1 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white';
       
-      // Auto-seleccionar músculo compatible con la vista
-      const currentM = CLINICAL_DATA[activeMuscleKey];
+      const currentM = CLINICAL_CATALOG[activeMuscleKey];
       if (currentM && currentM.view !== view) {
-        const nextKey = Object.keys(CLINICAL_DATA).find(k => CLINICAL_DATA[k].view === view);
+        const nextKey = Object.keys(CLINICAL_CATALOG).find(k => CLINICAL_CATALOG[k].view === view);
         if (nextKey) selectMuscle(nextKey);
       }
       
@@ -762,12 +974,12 @@
       
       const percent = parseInt(val);
       deepSvg.style.opacity = (percent / 100);
-      photo.style.opacity = (1 - (percent * 0.55 / 100)); // mantiene visibilidad de referencia de la piel
+      photo.style.opacity = (1 - (percent * 0.55 / 100));
 
       if (percent === 0) {
         label.innerText = '0% Piel Real';
       } else if (percent === 100) {
-        label.innerText = '100% Disección Plena';
+        label.innerText = '100% Plano Óseo';
       } else {
         label.innerText = `${percent}% Transiluminado`;
       }
@@ -823,7 +1035,7 @@
 
     function renderMuscleCatalog() {
       const container = document.getElementById('muscle-catalog');
-      container.innerHTML = Object.values(CLINICAL_DATA).map(m => `
+      container.innerHTML = Object.values(CLINICAL_CATALOG).map(m => `
         <button id="cat-${m.id}" onclick="selectMuscle('${m.id}')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-slate-300 hover:bg-slate-800/80 hover:text-white transition flex items-center justify-between group">
           <div>
             <div class="font-semibold">${m.name}</div>
@@ -836,15 +1048,13 @@
 
     function selectMuscle(key) {
       activeMuscleKey = key;
-      const m = CLINICAL_DATA[key];
+      const m = CLINICAL_CATALOG[key];
       if (!m) return;
 
-      // Actualizar vista si no coincide
       if (m.view !== currentView) {
         setView(m.view);
       }
 
-      // Detalle clínico
       document.getElementById('detail-name').innerText = m.name;
       document.getElementById('detail-latin').innerText = m.latin;
       document.getElementById('detail-region').innerText = m.region;
@@ -859,10 +1069,9 @@
       document.getElementById('detail-proto-fascia').innerText = m.fascia;
       document.getElementById('detail-precautions').innerText = m.precautions;
 
-      document.getElementById('active-context-text').innerText = `${m.name} (${m.type})`;
+      document.getElementById('active-context-title').innerText = m.name;
 
-      // Catálogo selector
-      Object.keys(CLINICAL_DATA).forEach(k => {
+      Object.keys(CLINICAL_CATALOG).forEach(k => {
         const el = document.getElementById(`cat-${k}`);
         if (el) {
           if (k === key) {
@@ -879,7 +1088,7 @@
     function handleSearch(query) {
       const q = query.toLowerCase().trim();
       if (!q) return;
-      for (const [k, m] of Object.entries(CLINICAL_DATA)) {
+      for (const [k, m] of Object.entries(CLINICAL_CATALOG)) {
         if (m.name.toLowerCase().includes(q) || m.pain.toLowerCase().includes(q) || m.latin.toLowerCase().includes(q)) {
           selectMuscle(k);
           break;
@@ -887,7 +1096,7 @@
       }
     }
 
-    // RENDERIZADO DE CAPAS SOBRE LA FOTO DE ALTA DEFINICIÓN (655 x 1024)
+    // RENDERIZADO CALIBRADO DINÁMICO
     function renderOverlays() {
       const deepMusclesArt = document.getElementById('deep-muscles-art');
       const bonyGroup = document.getElementById('bony-landmarks-group');
@@ -899,93 +1108,148 @@
       painLayer.innerHTML = '';
       triggersLayer.innerHTML = '';
 
-      const isPost = currentView === 'posterior';
+      const lm = ANATOMICAL_LANDMARKS[`${currentGender}_${currentView}`];
+      if (!lm) return;
 
-      // 1. DIBUJAR REPAROS ÓSEOS PALPABLES SOBRE LA FOTO REAL
-      if (isPost) {
+      // 1. REPAROS ÓSEOS PALPABLES ESPECÍFICOS DEL MODELO Y GÉNERO
+      if (currentView === 'posterior') {
         bonyGroup.innerHTML = `
-          <!-- Apófisis espinosa C7 -->
-          <circle cx="327" cy="180" r="4.5" fill="none" stroke="#38bdf8" stroke-width="1.8"/>
-          <text x="337" y="184" font-size="10" font-family="monospace" font-weight="bold" fill="#38bdf8">C7</text>
+          <!-- C7 -->
+          <circle cx="${lm.c7.x}" cy="${lm.c7.y}" r="4.5" fill="none" stroke="#38bdf8" stroke-width="1.8"/>
+          <text x="${lm.c7.x + 8}" y="${lm.c7.y + 4}" font-size="10" font-family="monospace" font-weight="bold" fill="#38bdf8">C7</text>
 
-          <!-- Espina de la Escápula y Acromion -->
-          <path d="M 235 220 L 290 230" class="bone-landmark"/>
-          <path d="M 420 220 L 365 230" class="bone-landmark"/>
-          <text x="210" y="215" font-size="9" font-family="monospace" fill="#7dd3fc">Acromion Izq</text>
-          <text x="400" y="215" font-size="9" font-family="monospace" fill="#7dd3fc">Acromion Der</text>
+          <!-- Espinas escapulares -->
+          <path d="${lm.scapulaSpineLeft}" class="bone-line"/>
+          <path d="${lm.scapulaSpineRight}" class="bone-line"/>
+          <text x="${lm.acromionLeft.x - 50}" y="${lm.acromionLeft.y}" font-size="9" font-family="monospace" fill="#7dd3fc">Acromion</text>
+          <text x="${lm.acromionRight.x + 8}" y="${lm.acromionRight.y}" font-size="9" font-family="monospace" fill="#7dd3fc">Acromion</text>
 
-          <!-- Ángulo inferior de la escápula (T7) -->
-          <circle cx="275" cy="285" r="3.5" fill="#38bdf8" opacity="0.6"/>
-          <circle cx="380" cy="285" r="3.5" fill="#38bdf8" opacity="0.6"/>
+          <!-- Escápulas inferiores T7 -->
+          <circle cx="${lm.scapulaInferiorLeft.x}" cy="${lm.scapulaInferiorLeft.y}" r="3.5" fill="#38bdf8" opacity="0.6"/>
+          <circle cx="${lm.scapulaInferiorRight.x}" cy="${lm.scapulaInferiorRight.y}" r="3.5" fill="#38bdf8" opacity="0.6"/>
 
-          <!-- Columna Vertebral y Fascia Toracolumbar -->
-          <line x1="327" y1="180" x2="327" y2="440" stroke="#0ea5e9" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.5"/>
+          <!-- Columna y Fascia toracolumbar -->
+          <line x1="${lm.midlineX}" y1="${lm.c7.y}" x2="${lm.midlineX}" y2="${lm.sacrumCenter.y}" stroke="#0ea5e9" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.5"/>
 
-          <!-- Crestas Ilíacas y EIPS (Espina Ilíaca Posterosuperior) -->
-          <path d="M 230 420 C 270 410, 310 435, 327 440 C 344 435, 384 410, 424 420" class="bone-landmark"/>
-          <circle cx="305" cy="445" r="4" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
-          <circle cx="350" cy="445" r="4" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
-          <text x="330" y="460" font-size="9" font-family="monospace" text-anchor="middle" fill="#7dd3fc">EIPS (S2)</text>
+          <!-- EIPS / S2 -->
+          <circle cx="${lm.eipsLeft.x}" cy="${lm.eipsLeft.y}" r="4" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+          <circle cx="${lm.eipsRight.x}" cy="${lm.eipsRight.y}" r="4" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="${lm.midlineX}" y="${lm.eipsLeft.y + 16}" font-size="9" font-family="monospace" text-anchor="middle" fill="#7dd3fc">EIPS (S2)</text>
 
-          <!-- Trocánter Mayor Femoral -->
-          <circle cx="215" cy="495" r="5" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
-          <circle cx="440" cy="495" r="5" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
-          <text x="165" y="500" font-size="9" font-family="monospace" fill="#7dd3fc">Trocánter</text>
-          <text x="450" y="500" font-size="9" font-family="monospace" fill="#7dd3fc">Trocánter</text>
+          <!-- Trocánteres -->
+          <circle cx="${lm.trochanterLeft.x}" cy="${lm.trochanterLeft.y}" r="5" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+          <circle cx="${lm.trochanterRight.x}" cy="${lm.trochanterRight.y}" r="5" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="${lm.trochanterLeft.x - 55}" y="${lm.trochanterLeft.y + 4}" font-size="9" font-family="monospace" fill="#7dd3fc">Trocánter</text>
+          <text x="${lm.trochanterRight.x + 8}" y="${lm.trochanterRight.y + 4}" font-size="9" font-family="monospace" fill="#7dd3fc">Trocánter</text>
         `;
       } else {
         bonyGroup.innerHTML = `
-          <!-- Clavículas y Horquilla Esternal -->
-          <path d="M 240 220 C 280 230, 315 225, 327 225 C 340 225, 375 230, 415 220" class="bone-landmark"/>
-          <circle cx="327" cy="225" r="4" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
-          <text x="327" y="215" font-size="9" font-family="monospace" text-anchor="middle" fill="#7dd3fc">Horquilla Esternal</text>
+          <!-- Clavículas y Horquilla -->
+          <path d="${lm.clavicleLeft}" class="bone-line"/>
+          <path d="${lm.clavicleRight}" class="bone-line"/>
+          <circle cx="${lm.sternalNotch.x}" cy="${lm.sternalNotch.y}" r="4.5" fill="none" stroke="#38bdf8" stroke-width="1.8"/>
+          <text x="${lm.sternalNotch.x}" y="${lm.sternalNotch.y - 8}" font-size="9" font-family="monospace" text-anchor="middle" fill="#7dd3fc">Horquilla Esternal</text>
 
-          <!-- Espinas Ilíacas Anterosuperiores (EIAS) -->
-          <circle cx="255" cy="455" r="4.5" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
-          <circle cx="400" cy="455" r="4.5" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
-          <text x="225" y="458" font-size="9" font-family="monospace" fill="#7dd3fc">EIAS</text>
-          <text x="410" y="458" font-size="9" font-family="monospace" fill="#7dd3fc">EIAS</text>
+          <!-- EIAS -->
+          <circle cx="${lm.eiasLeft.x}" cy="${lm.eiasLeft.y}" r="4.5" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+          <circle cx="${lm.eiasRight.x}" cy="${lm.eiasRight.y}" r="4.5" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="${lm.eiasLeft.x - 30}" y="${lm.eiasLeft.y + 4}" font-size="9" font-family="monospace" fill="#7dd3fc">EIAS</text>
+          <text x="${lm.eiasRight.x + 8}" y="${lm.eiasRight.y + 4}" font-size="9" font-family="monospace" fill="#7dd3fc">EIAS</text>
 
-          <!-- Rótula y Tuberosidad Tibial Anterior -->
-          <circle cx="275" cy="685" r="6" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
-          <circle cx="380" cy="685" r="6" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
-          <text x="327" y="690" font-size="9" font-family="monospace" text-anchor="middle" fill="#7dd3fc">Rótulas</text>
+          <!-- Rótulas -->
+          <circle cx="${lm.patellaLeft.x}" cy="${lm.patellaLeft.y}" r="6" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+          <circle cx="${lm.patellaRight.x}" cy="${lm.patellaRight.y}" r="6" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="${lm.midlineX}" y="${lm.patellaLeft.y + 4}" font-size="9" font-family="monospace" text-anchor="middle" fill="#7dd3fc">Rótulas</text>
         `;
       }
 
-      // 2. MÚSCULO SELECCIONADO Y PROYECCIÓN DE DOLOR REFERIDO
-      const activeMuscle = CLINICAL_DATA[activeMuscleKey];
-      if (activeMuscle && activeMuscle.view === currentView) {
+      // 2. MÚSCULO CALIBRADO ESPECÍFICO PARA ESTE GÉNERO Y POSTURA
+      const calibratedData = getModelCalibratedMuscle(activeMuscleKey, currentGender, currentView);
+      if (calibratedData) {
         
-        // Músculo profundo trazado
-        if (activeMuscle.deepMusclesPath) {
-          deepMusclesArt.innerHTML = activeMuscle.deepMusclesPath;
+        // Músculo profundo dibujado sobre la foto
+        if (calibratedData.deepPath) {
+          deepMusclesArt.innerHTML = calibratedData.deepPath;
         }
 
-        // ZONAS DE DOLOR REFERIDO (Gradientes térmicos sobre la fotografía)
-        activeMuscle.painRadiations.forEach(r => {
+        // ZONAS DE DOLOR REFERIDO CALIBRADAS
+        calibratedData.painRadiations.forEach(r => {
           const fill = r.type === 'primary' ? 'url(#pain-primary-radial)' : 'url(#pain-secondary-radial)';
           painLayer.innerHTML += `
             <ellipse cx="${r.cx}" cy="${r.cy}" rx="${r.rx}" ry="${r.ry}" fill="${fill}" />
           `;
         });
 
-        // MARCADORES DE PUNTOS GATILLO "✕" PULSANTES
-        activeMuscle.points.forEach((pt) => {
+        // MARCADORES DE PUNTOS GATILLO "✕" CALIBRADOS
+        calibratedData.points.forEach((pt) => {
           triggersLayer.innerHTML += `
-            <g class="animate-trigger cursor-pointer" onclick="selectMuscle('${activeMuscle.id}')">
-              <!-- Halo de irradiación -->
-              <circle cx="${pt.x}" cy="${pt.y}" r="15" fill="rgba(239, 68, 68, 0.4)" stroke="#ef4444" stroke-width="2"/>
-              <circle cx="${pt.x}" cy="${pt.y}" r="8" fill="#ef4444" />
-              <!-- Símbolo X -->
-              <text x="${pt.x}" y="${pt.y + 4.5}" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="900" fill="#ffffff">✕</text>
-              <!-- Etiqueta de Punto Gatillo -->
-              <rect x="${pt.x + 14}" y="${pt.y - 12}" width="28" height="15" rx="4" fill="rgba(15,23,42,0.9)" stroke="#ef4444" stroke-width="1"/>
-              <text x="${pt.x + 28}" y="${pt.y - 1}" font-family="monospace" font-size="9" font-weight="bold" fill="#f87171" text-anchor="middle">${pt.label}</text>
+            <g class="animate-trigger cursor-pointer" onclick="selectMuscle('${activeMuscleKey}')">
+              <circle cx="${pt.x}" cy="${pt.y}" r="14" fill="rgba(239, 68, 68, 0.4)" stroke="#ef4444" stroke-width="2"/>
+              <circle cx="${pt.x}" cy="${pt.y}" r="7" fill="#ef4444" />
+              <text x="${pt.x}" y="${pt.y + 4}" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="900" fill="#ffffff">✕</text>
+              <rect x="${pt.x + 12}" y="${pt.y - 10}" width="26" height="14" rx="4" fill="rgba(15,23,42,0.92)" stroke="#ef4444" stroke-width="1"/>
+              <text x="${pt.x + 25}" y="${pt.y}" font-family="monospace" font-size="9" font-weight="bold" fill="#f87171" text-anchor="middle">${pt.label}</text>
             </g>
           `;
         });
       }
+    }
+
+    // MOTOR DE ZOOM Y PAN INTERACTIVO (CLINICAL WORKSTATION)
+    function setupPanZoom() {
+      const container = document.getElementById('viewport-container');
+      const wrapper = document.getElementById('transform-wrapper');
+
+      container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.12 : -0.12;
+        zoomScale = Math.min(Math.max(0.8, zoomScale + delta), 2.5);
+        updateTransform();
+      }, { passive: false });
+
+      container.addEventListener('mousedown', (e) => {
+        if (e.button === 0) {
+          isDragging = true;
+          startX = e.clientX - panX;
+          startY = e.clientY - panY;
+          container.classList.add('panning');
+        }
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        panX = e.clientX - startX;
+        panY = e.clientY - startY;
+        updateTransform();
+      });
+
+      window.addEventListener('mouseup', () => {
+        isDragging = false;
+        container.classList.remove('panning');
+      });
+    }
+
+    function updateTransform() {
+      const wrapper = document.getElementById('transform-wrapper');
+      wrapper.style.transform = `scale(${zoomScale}) translate(${panX / zoomScale}px, ${panY / zoomScale}px)`;
+      document.getElementById('zoom-level-label').innerText = `${Math.round(zoomScale * 100)}%`;
+    }
+
+    function zoomIn() {
+      zoomScale = Math.min(zoomScale + 0.2, 2.5);
+      updateTransform();
+    }
+
+    function zoomOut() {
+      zoomScale = Math.max(zoomScale - 0.2, 0.8);
+      updateTransform();
+    }
+
+    function resetZoomPan() {
+      zoomScale = 1;
+      panX = 0;
+      panY = 0;
+      updateTransform();
     }
 
     window.addEventListener('DOMContentLoaded', initApp);
