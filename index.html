@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TriggerPoints Pro • Mapeo Anatómico Fotorrealista de Grado Médico</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            medical: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+              950: '#082f49'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes pulse-glow {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(239,68,68,0.9)); }
+      50% { transform: scale(1.18); filter: drop-shadow(0 0 18px rgba(239,68,68,1)); }
+    }
+    .animate-trigger {
+      animation: pulse-glow 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      transform-origin: center;
+      transform-box: fill-box;
+    }
+    .bone-landmark {
+      stroke: #38bdf8;
+      stroke-dasharray: 2, 2;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+    .bone-landmark:hover {
+      opacity: 1;
+      stroke-width: 2;
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col font-sans antialiased overflow-hidden select-none">
+
+  <!-- ENCABEZADO SUPERIOR CLÍNICO -->
+  <header class="h-14 border-b border-slate-800 bg-slate-900/90 backdrop-blur px-6 flex items-center justify-between z-20 shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-medical-600 flex items-center justify-center shadow-lg shadow-medical-600/30">
+        <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14"/>
+        </svg>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base font-bold tracking-tight text-white">TriggerPoints <span class="text-medical-500">PRO</span></h1>
+          <span class="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Ultra-Realistic Clinical Grade</span>
+        </div>
+        <p class="text-[11px] text-slate-400">Fotogrametría Anatómica Real • Osteopatía, Fisioterapia y Masoterapia Full Body</p>
+      </div>
+    </div>
+
+    <!-- SELECTORES CENTRALES (GÉNERO, VISTA, TRANSLUCIDEZ) -->
+    <div class="flex items-center gap-4">
+      
+      <!-- SELECTOR DE GÉNERO (CON FOTOGRAFÍAS REALES) -->
+      <div class="bg-slate-950 p-1 rounded-xl border border-slate-800 flex items-center gap-1 shadow-inner">
+        <button id="btn-female" onclick="setGender('female')" class="px-3 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 bg-medical-600 text-white shadow-sm">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M12 14v7M9 18h6"/></svg>
+          Femenino (Foto Real)
+        </button>
+        <button id="btn-male" onclick="setGender('male')" class="px-3 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-white">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="10" cy="14" r="5"/><path d="M19 5l-5.4 5.4M19 5h-5M19 5v5"/></svg>
+          Masculino (Foto Real)
+        </button>
+      </div>
+
+      <!-- SELECTOR DE VISTA -->
+      <div class="bg-slate-950 p-1 rounded-xl border border-slate-800 flex items-center gap-1 shadow-inner">
+        <button id="btn-view-post" onclick="setView('posterior')" class="px-3 py-1 rounded-lg text-xs font-semibold transition bg-slate-800 text-white">
+          Posterior (Dorsal)
+        </button>
+        <button id="btn-view-ant" onclick="setView('anterior')" class="px-3 py-1 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white">
+          Anterior (Frontal)
+        </button>
+      </div>
+
+    </div>
+
+    <!-- BUSCADOR -->
+    <div class="relative w-64">
+      <input type="text" id="quick-search" placeholder="Buscar músculo o dolor..." 
+        class="w-full bg-slate-950/80 border border-slate-800 rounded-lg px-3 py-1.5 pl-8 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-medical-500 focus:ring-1 focus:ring-medical-500 transition"
+        oninput="handleSearch(this.value)">
+      <svg class="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+      </svg>
+    </div>
+  </header>
+
+  <!-- CUERPO PRINCIPAL -->
+  <div class="flex-1 flex overflow-hidden">
+
+    <!-- PANEL LATERAL IZQUIERDO: CONTROLES DE CAPA Y REPAROS ÓSEOS -->
+    <aside class="w-80 border-r border-slate-800 bg-slate-900/60 backdrop-blur flex flex-col shrink-0">
+      
+      <!-- CONTROL DESLIZANTE DE DISECCIÓN QUIRÚRGICA / RAYOS X -->
+      <div class="p-4 border-b border-slate-800 bg-slate-950/40">
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-medical-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            Nivel de Disección Tisular
+          </label>
+          <span id="dissection-val-label" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-medical-950 border border-medical-500/30 text-medical-300">
+            50% Mixto
+          </span>
+        </div>
+        
+        <input type="range" id="dissection-slider" min="0" max="100" value="50" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-medical-500 mb-2" oninput="handleDissectionChange(this.value)">
+        
+        <div class="flex justify-between text-[10px] text-slate-500 font-medium">
+          <span class="hover:text-slate-300 cursor-pointer" onclick="setDissectionLevel(0)">0% Piel Real</span>
+          <span class="hover:text-slate-300 cursor-pointer" onclick="setDissectionLevel(50)">50% Fascia/Media</span>
+          <span class="hover:text-slate-300 cursor-pointer" onclick="setDissectionLevel(100)">100% Profundo/Óseo</span>
+        </div>
+      </div>
+
+      <!-- CAPAS MUSCULARES DIRECTAS -->
+      <div class="p-4 border-b border-slate-800">
+        <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">Estrato Anatómico</label>
+        <div class="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-center text-xs">
+          <button id="layer-sup" onclick="setLayer('superficial')" class="py-1 rounded bg-medical-700 text-white font-medium shadow-sm">Superficial</button>
+          <button id="layer-med" onclick="setLayer('intermedia')" class="py-1 rounded text-slate-400 hover:text-white font-medium">Intermedia</button>
+          <button id="layer-prof" onclick="setLayer('profunda')" class="py-1 rounded text-slate-400 hover:text-white font-medium">Profunda</button>
+        </div>
+        
+        <!-- REPAROS ÓSEOS PALPABLES -->
+        <div class="mt-3 flex items-center justify-between bg-slate-950/60 p-2 rounded-lg border border-slate-800/80">
+          <span class="text-[11px] text-slate-300 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+            Reparos Óseos Palpables
+          </span>
+          <input type="checkbox" id="toggle-bony-landmarks" checked onchange="toggleBonyLandmarks(this.checked)" class="rounded bg-slate-900 border-slate-700 text-medical-600 focus:ring-0 cursor-pointer">
+        </div>
+      </div>
+
+      <!-- LISTA DE MOTIVOS DE CONSULTA CLÍNICA -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-4">
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center justify-between">
+            <span>Síntomas / Dolor Referido</span>
+            <span class="text-[9px] text-medical-400 bg-medical-500/10 px-1.5 py-0.5 rounded">Frecuente</span>
+          </h3>
+          <div class="space-y-1" id="symptom-list"></div>
+        </div>
+
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Catálogo Muscular Completo</h3>
+          <div class="space-y-1" id="muscle-catalog"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- PANEL CENTRAL: LIENZO FOTOGRÁFICO CLÍNICO CON TRANSLUCIDEZ DE CAPAS PROFUNDAS -->
+    <main class="flex-1 bg-slate-950 relative flex items-center justify-center overflow-hidden p-4">
+      
+      <!-- LEYENDA CLÍNICA -->
+      <div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
+        <div class="bg-slate-900/90 backdrop-blur border border-slate-800 rounded-xl p-3 shadow-2xl text-xs space-y-1.5">
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded-full bg-red-500 flex items-center justify-center text-[10px] font-black text-white shadow-lg shadow-red-500/80 animate-pulse">✕</span>
+            <span class="text-slate-200 font-semibold">Punto Gatillo (Trigger Point)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-2.5 rounded bg-red-500/60 border border-red-500"></span>
+            <span class="text-slate-300">Dolor Primario Esencial (Travell)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-2.5 rounded bg-amber-500/50 border border-amber-500"></span>
+            <span class="text-slate-300">Dolor Satélite / Desbordamiento</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-0.5 border-b-2 border-dashed border-sky-400"></span>
+            <span class="text-sky-300 text-[11px]">Reparos Óseos para Palpación</span>
+          </div>
+        </div>
+
+        <div id="active-context-pill" class="bg-medical-950/95 border border-medical-500/50 text-medical-200 px-3.5 py-2 rounded-xl text-xs shadow-2xl flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
+          <span id="active-context-text" class="font-semibold">Trapecio (Fibras Superiores)</span>
+        </div>
+      </div>
+
+      <!-- CONTENEDOR FOTOGRÁFICO DE ALTA DEFINICIÓN (655 x 1024 EXACTO) -->
+      <div class="relative h-full max-h-[920px] aspect-[655/1024] flex items-center justify-center rounded-2xl overflow-hidden shadow-2xl border border-slate-800/80 bg-black">
+        
+        <!-- 1. FOTOGRAFÍA CLÍNICA REAL DE SUPERFICIE -->
+        <img id="photo-surface" src="assets/images/female_posterior.jpg" alt="Fotografía Anatómica Femenina Posterior" 
+             class="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 z-0">
+
+        <!-- 2. CAPA DE DISECCIÓN PROFUNDA FOTORREALISTA (Músculos profundos, fascias y esqueleto) -->
+        <svg id="deep-dissection-svg" viewBox="0 0 655 1024" class="absolute inset-0 w-full h-full pointer-events-none z-10 transition-opacity duration-300 opacity-50">
+          <defs>
+            <!-- Texturas musculares fotorrealistas de grado médico -->
+            <linearGradient id="muscle-fiber-dark" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#7f1d1d" stop-opacity="0.9" />
+              <stop offset="50%" stop-color="#991b1b" stop-opacity="0.85" />
+              <stop offset="100%" stop-color="#450a0a" stop-opacity="0.95" />
+            </linearGradient>
+            <linearGradient id="fascia-silver" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#94a3b8" stop-opacity="0.5" />
+              <stop offset="50%" stop-color="#e2e8f0" stop-opacity="0.8" />
+              <stop offset="100%" stop-color="#64748b" stop-opacity="0.5" />
+            </linearGradient>
+            <!-- Filtro de relieve esquelético 3D -->
+            <filter id="bone-relief">
+              <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000" flood-opacity="0.8"/>
+            </filter>
+          </defs>
+
+          <!-- GRUPO DINÁMICO DE PLANOS PROFUNDOS -->
+          <g id="deep-muscles-art"></g>
+          
+          <!-- REPAROS ÓSEOS PALPABLES (LANDMARKS) -->
+          <g id="bony-landmarks-group"></g>
+        </svg>
+
+        <!-- 3. CAPA DE MAPEO TÉRMICO DE DOLOR REFERIDO Y PUNTOS GATILLO -->
+        <svg id="interactive-overlay-svg" viewBox="0 0 655 1024" class="absolute inset-0 w-full h-full z-20 pointer-events-auto">
+          <defs>
+            <!-- Gradiente de dolor esencial primario (rojo de alta penetración) -->
+            <radialGradient id="pain-primary-radial" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="rgba(239, 68, 68, 0.95)" />
+              <stop offset="45%" stop-color="rgba(239, 68, 68, 0.65)" />
+              <stop offset="75%" stop-color="rgba(239, 68, 68, 0.25)" />
+              <stop offset="100%" stop-color="rgba(239, 68, 68, 0)" />
+            </radialGradient>
+            <!-- Gradiente de dolor secundario satélite (ámbar/naranja) -->
+            <radialGradient id="pain-secondary-radial" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="rgba(245, 158, 11, 0.9)" />
+              <stop offset="55%" stop-color="rgba(245, 158, 11, 0.5)" />
+              <stop offset="100%" stop-color="rgba(245, 158, 11, 0)" />
+            </radialGradient>
+          </defs>
+
+          <!-- DOLOR REFERIDO -->
+          <g id="pain-radiation-layer"></g>
+
+          <!-- PUNTOS GATILLO "✕" -->
+          <g id="trigger-points-layer"></g>
+        </svg>
+
+      </div>
+    </main>
+
+    <!-- PANEL DERECHO: PROTOCOLO CLÍNICO & OSTEOPÁTICO -->
+    <aside class="w-96 border-l border-slate-800 bg-slate-900/80 backdrop-blur flex flex-col shrink-0 overflow-y-auto">
+      
+      <!-- CABECERA DE LA FICHA -->
+      <div class="p-5 border-b border-slate-800 bg-slate-900 sticky top-0 z-10 shadow-sm">
+        <div class="flex items-start justify-between">
+          <div>
+            <span id="detail-latin" class="text-[11px] font-mono text-medical-400 block italic">Musculus trapezius</span>
+            <h2 id="detail-name" class="text-base font-bold text-white tracking-tight">Trapecio (Fibras Superiores)</h2>
+          </div>
+          <span id="detail-trigger-badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/30">
+            PG Activo
+          </span>
+        </div>
+        <p id="detail-region" class="text-xs text-slate-400 mt-1">Cervicodorsal • Estrato Superficial</p>
+      </div>
+
+      <!-- CONTENIDO DEL DOSSIER CLÍNICO -->
+      <div class="p-5 space-y-6 text-xs text-slate-300">
+        
+        <!-- DOLOR REFERIDO SEGÚN TRAVELL & SIMONS -->
+        <section class="bg-slate-950/70 rounded-xl p-3.5 border border-slate-800">
+          <h4 class="text-[11px] font-bold uppercase tracking-wider text-red-400 flex items-center gap-1.5 mb-2">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            Patrón de Dolor Referido (Proyección Clínica)
+          </h4>
+          <p id="detail-pain" class="leading-relaxed text-slate-200">
+            Cefalea temporal en signo de interrogación: región posterolateral del cuello, ángulo mandibular, sien y órbita retroocular. Frecuente mareo postural y rigidez acromioclavicular.
+          </p>
+        </section>
+
+        <!-- GUÍA DE PALPACIÓN SOBRE EL CUERPO REAL -->
+        <section>
+          <h4 class="text-[11px] font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5 mb-2">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 11V7a5 5 0 0110 0v4M5 11h14v10H5z"/></svg>
+            Semiología & Técnica de Palpación Clínica
+          </h4>
+          <div class="bg-slate-950/80 rounded-xl p-3.5 border border-slate-800 space-y-2">
+            <div>
+              <span class="text-slate-400 text-[10px] uppercase font-bold block">Abordaje Palpatorio:</span>
+              <span id="detail-palpation" class="font-semibold text-white">Palpación en Pinza (Pincer Palpation)</span>
+            </div>
+            <p id="detail-palpation-desc" class="text-slate-300 leading-relaxed text-[11px]">
+              Pinzar el vientre muscular entre el pulgar y el índice en el tercio medio del borde superior del hombro. La presión transversal rápida provoca el <strong class="text-sky-400">espasmo local (LTR)</strong> y el <strong class="text-red-400">Signo del Salto</strong>.
+            </p>
+            <div class="pt-2 border-t border-slate-800/80">
+              <span class="text-slate-400 text-[10px] uppercase font-bold block">Reparo Óseo Clave:</span>
+              <span id="detail-landmark" class="text-sky-300 font-medium text-[11px]">Punto medio entre apófisis espinosa C7 y el acromion.</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- CADENA BIOMECÁNICA OSTEOPÁTICA -->
+        <section>
+          <h4 class="text-[11px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5 mb-2">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Cadena Miofascial (Thomas Myers / Stecco)
+          </h4>
+          <div class="bg-slate-950/80 rounded-xl p-3 border border-slate-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400 text-[10px] uppercase font-bold">Línea Anatómica:</span>
+              <span id="detail-chain" class="text-amber-300 font-semibold text-[11px]">Línea Espiral (SPL) & Línea Posterior Brazo</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400 text-[10px] uppercase font-bold">Inervación Radicular:</span>
+              <span id="detail-nerve" class="text-slate-200 font-mono text-[11px]">N. Accesorio (NC XI) y ramos C3-C4</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- PROTOCOLOS DE TRATAMIENTO MANUAL -->
+        <section>
+          <h4 class="text-[11px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5 mb-2">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Protocolo Clínico de Desactivación
+          </h4>
+          <div class="space-y-2 text-[11px]">
+            <div class="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800">
+              <strong class="text-emerald-400 block mb-0.5">1. Compresión Isquémica (Simons/Travell):</strong>
+              <span id="detail-proto-comp" class="text-slate-300">Presión digital constante (escala EVA 6-7/10) durante 60-90 segundos hasta el cese de la resistencia perimisial.</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800">
+              <strong class="text-emerald-400 block mb-0.5">2. Técnica de Energía Muscular (MET de Mitchell):</strong>
+              <span id="detail-proto-met" class="text-slate-300">Contracción isométrica suave contra resistencia (20% fuerza máxima) durante 7 segundos; inhalar, relajar y ganar elongación en espiración.</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800">
+              <strong class="text-emerald-400 block mb-0.5">3. Movilización Miofascial Tridimensional:</strong>
+              <span id="detail-proto-fascia" class="text-slate-300">Fricción transversa profunda (Cyriax) y trazos en J a lo largo de los tabiques intermusculares.</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- BANDERAS ROJAS / CONTRAINDICACIONES -->
+        <section class="p-3.5 rounded-xl bg-red-950/30 border border-red-500/30">
+          <h4 class="text-[10px] font-bold uppercase tracking-wider text-red-400 flex items-center gap-1 mb-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            Banderas Rojas & Precauciones Médicas
+          </h4>
+          <p id="detail-precautions" class="text-[10px] text-red-300 leading-tight">
+            Evitar presión compresiva anterior sobre el triángulo carotídeo. No aplicar en presencia de sospecha de aneurisma, estenosis carotídea o inestabilidad atlantoaxial.
+          </p>
+        </section>
+
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- BASE DE DATOS MÉDICA CALIBRADA A LAS FOTOGRAFÍAS REALES (655 x 1024) -->
+  <script>
+    const CLINICAL_DATA = {
+      // POSTERIOR
+      trapezius: {
+        id: 'trapezius',
+        name: 'Trapecio (Fibras Superiores)',
+        latin: 'Musculus trapezius (pars descendens)',
+        region: 'Región Cervicodorsal • Estrato Superficial',
+        type: 'PG Activo (Primario)',
+        layer: 'superficial',
+        view: 'posterior',
+        pain: 'Cefalea temporal en signo de interrogación: dolor occipitocervical que asciende por la sien hasta el arco superciliar y la órbita. Mareo postural y sensación de hombro rígido.',
+        palpation: 'Palpación en Pinza (Pincer Palpation)',
+        palpationDesc: 'Pinzar el borde superior del trapecio entre el pulgar y el índice, comprimiendo de anterior a posterior en el vientre muscular.',
+        landmark: 'Punto medio entre la apófisis espinosa C7 y el acromion escapular.',
+        chain: 'Línea Espiral (SPL) & Línea Posterior Superficial del Brazo',
+        nerve: 'Nervio Accesorio (NC XI) y C3-C4',
+        comp: 'Presión digital constante (60-90s) hasta ceder la resistencia tisular.',
+        met: 'Inclinación lateral contralateral con flexión leve. Contracción isométrica de 7s hacia el hombro.',
+        fascia: 'Trazos en J y elongación longitudinal fascial del borde cervicooccipital.',
+        precautions: 'No comprimir el triángulo carotídeo en abordajes anterolaterales.',
+        // Coordenadas calibradas a la foto 655x1024
+        points: [
+          { x: 295, y: 185, label: 'PG1' },
+          { x: 360, y: 185, label: 'PG1' },
+          { x: 280, y: 220, label: 'PG2' },
+          { x: 375, y: 220, label: 'PG2' }
+        ],
+        painRadiations: [
+          { cx: 295, cy: 125, rx: 28, ry: 45, type: 'primary' },
+          { cx: 360, cy: 125, rx: 28, ry: 45, type: 'primary' },
+          { cx: 327, cy: 80, rx: 40, ry: 35, type: 'secondary' },
+          { cx: 255, cy: 185, rx: 25, ry: 25, type: 'primary' },
+          { cx: 400, cy: 185, rx: 25, ry: 25, type: 'primary' }
+        ],
+        deepMusclesPath: `
+          <!-- Músculo Trapecio Superficial / Disección -->
+          <path d="M 327 125 L 375 180 L 405 210 L 370 270 L 327 340 L 285 270 L 250 210 L 280 180 Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.5" opacity="0.75"/>
+        `
+      },
+      levator: {
+        id: 'levator',
+        name: 'Elevador de la Escápula',
+        latin: 'Musculus levator scapulae',
+        region: 'Cuello & Ángulo Escapular • Estrato Intermedio',
+        type: 'PG Activo (Tortícolis)',
+        layer: 'intermedia',
+        view: 'posterior',
+        pain: 'Dolor angular punzante en el ángulo cervicoescapular y borde medial de la escápula ("cuello bloqueado / tortícolis"). Gran limitación al rotar la cabeza al mismo lado.',
+        palpation: 'Palpación Plana Firme',
+        palpationDesc: 'Rechazar el borde anterior del trapecio superior hacia adelante y presionar directamente sobre la inserción del ángulo superior escapular.',
+        landmark: 'Ángulo superomedial de la escápula (a la altura de T2).',
+        chain: 'Línea Posterior Profunda del Brazo',
+        nerve: 'Nervio Escapular Dorsal (C5) y ramos C3-C4',
+        comp: 'Presión con pulgar sostenida en decúbito prono con brazo en rotación interna.',
+        met: 'Flexión con rotación de 45° contralateral. Resistencia isométrica hacia extensión.',
+        fascia: 'Despegamiento miofascial del surco interescapulovertebral.',
+        precautions: 'Cuidado con la arteria cervical transversa profunda.',
+        points: [
+          { x: 305, y: 198, label: 'PG1' },
+          { x: 350, y: 198, label: 'PG1' }
+        ],
+        painRadiations: [
+          { cx: 300, cy: 220, rx: 22, ry: 35, type: 'primary' },
+          { cx: 355, cy: 220, rx: 22, ry: 35, type: 'primary' },
+          { cx: 327, cy: 160, rx: 25, ry: 30, type: 'secondary' }
+        ],
+        deepMusclesPath: `
+          <!-- Elevador de la escápula -->
+          <path d="M 318 150 L 305 215 L 295 210 L 312 148 Z" fill="url(#muscle-fiber-dark)" stroke="#0ea5e9" stroke-width="1.5" opacity="0.85"/>
+          <path d="M 336 150 L 350 215 L 360 210 L 342 148 Z" fill="url(#muscle-fiber-dark)" stroke="#0ea5e9" stroke-width="1.5" opacity="0.85"/>
+        `
+      },
+      infraspinatus: {
+        id: 'infraspinatus',
+        name: 'Infraespinoso',
+        latin: 'Musculus infraspinatus',
+        region: 'Manguito Rotador • Estrato Intermedio',
+        type: 'PG Activo (Clínica de Hombro)',
+        layer: 'intermedia',
+        view: 'posterior',
+        pain: 'Dolor profundo y sordo en la cara anterior del hombro (frecuentemente diagnosticado erróneamente como tendinopatía de la porción larga del bíceps). Irradia por la cara lateral del brazo y pulgar.',
+        palpation: 'Palpación Plana contra Fosa Ósea',
+        palpationDesc: 'Comprimir directamente contra la fosa ósea infraespinosa, 2 a 3 cm distal a la espina de la escápula.',
+        landmark: 'Fosa infraespinosa, justo por debajo de la cresta espinosa de la escápula.',
+        chain: 'Línea Posterior Superficial del Brazo',
+        nerve: 'Nervio Supraescapular (C5-C6)',
+        comp: 'Presión firme con eminencia tenar o pulgares reforzados en decúbito lateral.',
+        met: 'Rotación externa con resistencia isométrica suave.',
+        fascia: 'Movilización de la fascia aponeurótica densa de la fosa.',
+        precautions: 'Diferenciar de rotura parcial del manguito de los rotadores.',
+        points: [
+          { x: 265, y: 245, label: 'PG1' },
+          { x: 390, y: 245, label: 'PG1' },
+          { x: 250, y: 265, label: 'PG2' },
+          { x: 405, y: 265, label: 'PG2' }
+        ],
+        painRadiations: [
+          { cx: 215, cy: 245, rx: 25, ry: 35, type: 'primary' },
+          { cx: 440, cy: 245, rx: 25, ry: 35, type: 'primary' },
+          { cx: 200, cy: 310, rx: 20, ry: 50, type: 'secondary' },
+          { cx: 455, cy: 310, rx: 20, ry: 50, type: 'secondary' }
+        ],
+        deepMusclesPath: `
+          <!-- Fosa Infraespinosa -->
+          <path d="M 245 220 L 290 230 L 275 285 L 240 260 Z" fill="url(#muscle-fiber-dark)" stroke="#38bdf8" stroke-width="1.5" opacity="0.8"/>
+          <path d="M 410 220 L 365 230 L 380 285 L 415 260 Z" fill="url(#muscle-fiber-dark)" stroke="#38bdf8" stroke-width="1.5" opacity="0.8"/>
+        `
+      },
+      quadratus: {
+        id: 'quadratus',
+        name: 'Cuadrado Lumbar',
+        latin: 'Musculus quadratus lumborum',
+        region: 'Lumbar & Pélvica • Estrato Profundo',
+        type: 'PG Activo (Lumbalgia Severa)',
+        layer: 'profunda',
+        view: 'posterior',
+        pain: 'Lumbalgia incapacitante que se agrava al toser, levantarse de la silla o rotar en la cama. Dolor referido a la cresta ilíaca, articulación sacroilíaca y región glútea profunda.',
+        palpation: 'Palpación Oblicua Flanco Lateral',
+        palpationDesc: 'Paciente en decúbito lateral. Abordar el flanco entre la duodécima costilla y la cresta ilíaca empujando el erector espinal hacia la línea media.',
+        landmark: 'Espacio entre la 12ª costilla y el borde posterior de la cresta ilíaca.',
+        chain: 'Línea Lateral & Línea Frontal Profunda',
+        nerve: 'Nervio subcostal (T12) y ramos de L1-L4',
+        comp: 'Presión oblicua anterior con pulgares superpuestos durante 90 segundos.',
+        met: 'Lifting pélvico con estiramiento lateral progresivo.',
+        fascia: 'Descompresión de la fascia toracolumbar media y profunda.',
+        precautions: 'Evitar sobrepresión renal en el ángulo costo-vertebral.',
+        points: [
+          { x: 295, y: 385, label: 'PG1' },
+          { x: 360, y: 385, label: 'PG1' },
+          { x: 290, y: 410, label: 'PG2' },
+          { x: 365, y: 410, label: 'PG2' }
+        ],
+        painRadiations: [
+          { cx: 295, cy: 440, rx: 30, ry: 35, type: 'primary' },
+          { cx: 360, cy: 440, rx: 30, ry: 35, type: 'primary' },
+          { cx: 327, cy: 445, rx: 45, ry: 30, type: 'secondary' }
+        ],
+        deepMusclesPath: `
+          <!-- Cuadrado Lumbar Profundo -->
+          <rect x="280" y="370" width="30" height="50" rx="6" fill="url(#muscle-fiber-dark)" stroke="#e11d48" stroke-width="1.5" opacity="0.85"/>
+          <rect x="345" y="370" width="30" height="50" rx="6" fill="url(#muscle-fiber-dark)" stroke="#e11d48" stroke-width="1.5" opacity="0.85"/>
+        `
+      },
+      piriformis: {
+        id: 'piriformis',
+        name: 'Piriforme (Piramidal de la Pelvis)',
+        latin: 'Musculus piriformis',
+        region: 'Pelvis Glútea Profunda • Estrato Profundo',
+        type: 'PG Activo (Pseudociática)',
+        layer: 'profunda',
+        view: 'posterior',
+        pain: 'Pseudociática miofascial severa: dolor sordo en la nalga con irradiación punzante por la cara posterior del muslo hasta la rodilla. Agravado en sedestación prolongada.',
+        palpation: 'Compresión Isquémica Profunda con Codo/Pulgares',
+        palpationDesc: 'Paciente en decúbito prono. Localizar el punto medio entre el borde lateral del sacro (S2-S4) y el trocánter mayor del fémur.',
+        landmark: 'Punto medio de la línea imaginaria entre la EIPS / sacro y el trocánter mayor.',
+        chain: 'Línea Posterior Profunda / Cadena de Rotación Externa',
+        nerve: 'Ramos del plexo sacro (S1-S2)',
+        comp: 'Presión con el codo o los pulgares reforzados perpendicularmente al trocánter.',
+        met: 'Flexión de cadera a 60° con aducción y rotación interna pasiva mantenida.',
+        fascia: 'Liberación de la fascia glútea profunda y retináculo peripiriforme.',
+        precautions: 'El nervio ciático transcurre inmediatamente por debajo del vientre muscular.',
+        points: [
+          { x: 290, y: 475, label: 'PG1' },
+          { x: 365, y: 475, label: 'PG1' }
+        ],
+        painRadiations: [
+          { cx: 285, cy: 495, rx: 32, ry: 40, type: 'primary' },
+          { cx: 370, cy: 495, rx: 32, ry: 40, type: 'primary' },
+          { cx: 275, cy: 590, rx: 25, ry: 65, type: 'secondary' },
+          { cx: 380, cy: 590, rx: 25, ry: 65, type: 'secondary' }
+        ],
+        deepMusclesPath: `
+          <!-- Músculo Piriforme Profundo -->
+          <path d="M 320 460 L 260 480 L 265 490 L 320 470 Z" fill="url(#muscle-fiber-dark)" stroke="#f43f5e" stroke-width="1.5" opacity="0.9"/>
+          <path d="M 335 460 L 395 480 L 390 490 L 335 470 Z" fill="url(#muscle-fiber-dark)" stroke="#f43f5e" stroke-width="1.5" opacity="0.9"/>
+        `
+      },
+      gluteus_medius: {
+        id: 'gluteus_medius',
+        name: 'Glúteo Medio',
+        latin: 'Musculus gluteus medius',
+        region: 'Pelvis Lateral • Estrato Intermedio',
+        type: 'PG Activo (Inestabilidad Pélvica)',
+        layer: 'intermedia',
+        view: 'posterior',
+        pain: 'Dolor en la cresta ilíaca posterolateral, articulación sacroilíaca y nalga. Frecuente dolor referido por la cara lateral del muslo hasta la rodilla (simula lumbociatalgia L5).',
+        palpation: 'Palpación Plana Firme contra el Hueso Ilíaco',
+        palpationDesc: 'Decúbito lateral. Palpar inmediatamente por debajo de la cresta ilíaca a lo largo de sus tercios posterior y medio.',
+        landmark: 'Borde inferior de la cresta ilíaca ósea.',
+        chain: 'Línea Lateral (LL)',
+        nerve: 'Nervio Glúteo Superior (L4-S1)',
+        comp: 'Presión perpendicular con pulgar reforzado.',
+        met: 'Aducción de cadera por debajo de la línea media en decúbito lateral.',
+        fascia: 'Liberación de los tabiques interfasciales con el tensor de la fascia lata.',
+        precautions: 'Descartar bursitis trocantérea concomitante.',
+        points: [
+          { x: 255, y: 440, label: 'PG1' },
+          { x: 400, y: 440, label: 'PG1' },
+          { x: 245, y: 455, label: 'PG2' },
+          { x: 410, y: 455, label: 'PG2' }
+        ],
+        painRadiations: [
+          { cx: 250, cy: 465, rx: 28, ry: 35, type: 'primary' },
+          { cx: 405, cy: 465, rx: 28, ry: 35, type: 'primary' },
+          { cx: 240, cy: 535, rx: 20, ry: 45, type: 'secondary' },
+          { cx: 415, cy: 535, rx: 20, ry: 45, type: 'secondary' }
+        ],
+        deepMusclesPath: `
+          <!-- Glúteo Medio -->
+          <path d="M 235 425 C 265 420, 295 435, 290 460 C 275 480, 245 470, 235 425 Z" fill="url(#muscle-fiber-dark)" stroke="#38bdf8" stroke-width="1.5" opacity="0.8"/>
+          <path d="M 420 425 C 390 420, 360 435, 365 460 C 380 480, 410 470, 420 425 Z" fill="url(#muscle-fiber-dark)" stroke="#38bdf8" stroke-width="1.5" opacity="0.8"/>
+        `
+      },
+      gastrocnemius: {
+        id: 'gastrocnemius',
+        name: 'Gastrocnemio (Gemelos)',
+        latin: 'Musculus gastrocnemius',
+        region: 'Pantorrilla Posterior • Estrato Superficial',
+        type: 'PG Activo (Calambres Nocturnos)',
+        layer: 'superficial',
+        view: 'posterior',
+        pain: 'Dolor lacerante en la pantorrilla, hueco poplíteo y planta del pie (arco longitudinal medial). Causa principal de calambres nocturnos intensos.',
+        palpation: 'Palpación en Pinza Profunda',
+        palpationDesc: 'Pinzar el vientre medial y lateral inmediatamente distal a los cóndilos femorales con la rodilla ligeramente flexionada.',
+        landmark: 'Cóndilos femorales medial y lateral en la cara posterior de la rodilla.',
+        chain: 'Línea Posterior Superficial (SBL)',
+        nerve: 'Nervio Tibial (S1-S2)',
+        comp: 'Presión en pinza progresiva (60-90s) con paciente en decúbito prono.',
+        met: 'Dorsiflexión pasiva con rodilla extendida contra resistencia de 7 segundos.',
+        fascia: 'Estiramiento del tendón de Aquiles y despegamiento fascial de los gemelos.',
+        precautions: 'Descartar SIEMPRE Trombosis Venosa Profunda (TVP) ante dolor agudo en pantorrilla (Signo de Homans).',
+        points: [
+          { x: 275, y: 745, label: 'PG1' },
+          { x: 380, y: 745, label: 'PG1' },
+          { x: 295, y: 780, label: 'PG2' },
+          { x: 360, y: 780, label: 'PG2' }
+        ],
+        painRadiations: [
+          { cx: 280, cy: 770, rx: 25, ry: 50, type: 'primary' },
+          { cx: 375, cy: 770, rx: 25, ry: 50, type: 'primary' },
+          { cx: 290, cy: 910, rx: 18, ry: 30, type: 'secondary' },
+          { cx: 365, cy: 910, rx: 18, ry: 30, type: 'secondary' }
+        ],
+        deepMusclesPath: `
+          <!-- Gemelos / Sóleo -->
+          <path d="M 260 710 C 290 715, 305 745, 290 820 L 270 820 C 255 770, 250 730, 260 710 Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.5" opacity="0.8"/>
+          <path d="M 395 710 C 365 715, 350 745, 365 820 L 385 820 C 400 770, 405 730, 395 710 Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.5" opacity="0.8"/>
+        `
+      },
+
+      // ANTERIOR
+      sternocleidomastoid: {
+        id: 'sternocleidomastoid',
+        name: 'Esternocleidomastoideo (ECM)',
+        latin: 'Musculus sternocleidomastoideus',
+        region: 'Cuello Anterolateral • Estrato Superficial',
+        type: 'PG Activo (Cefalea Frontal y Síntomas Autonómicos)',
+        layer: 'superficial',
+        view: 'anterior',
+        pain: 'Cefalea frontal intensa, dolor retroocular, dolor en el oído, mareo postural y síntomas autonómicos (lagrimeo ocular, taponamiento nasal homolateral).',
+        palpation: 'Palpación en Pinza Bimanual Aislada',
+        palpationDesc: 'Pinzar el vientre esternal o clavicular entre el pulgar y el índice, aislando el músculo hacia afuera para no presionar la arteria carótida.',
+        landmark: 'Manubrio esternal, tercio medial de la clavícula y apófisis mastoides.',
+        chain: 'Línea Frontal Superficial (SFL)',
+        nerve: 'Nervio Accesorio (NC XI) y C2-C3',
+        comp: 'Presión en pinza suave durante 60 segundos manteniendo ligera rotación.',
+        met: 'Extensión suave con rotación homolateral e inclinación contralateral.',
+        fascia: 'Trazos longitudinales de la fascia cervical superficial.',
+        precautions: 'Peligro con el seno carotídeo. No masajear bilateralmente a la vez.',
+        points: [
+          { x: 305, y: 165, label: 'PG1' },
+          { x: 350, y: 165, label: 'PG1' },
+          { x: 295, y: 185, label: 'PG2' },
+          { x: 360, y: 185, label: 'PG2' }
+        ],
+        painRadiations: [
+          { cx: 327, cy: 65, rx: 35, ry: 20, type: 'primary' },
+          { cx: 290, cy: 110, rx: 25, ry: 30, type: 'primary' },
+          { cx: 365, cy: 110, rx: 25, ry: 30, type: 'primary' }
+        ],
+        deepMusclesPath: `
+          <!-- ECM -->
+          <path d="M 290 140 L 315 200 L 305 202 L 282 142 Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.5" opacity="0.85"/>
+          <path d="M 365 140 L 340 200 L 350 202 L 373 142 Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.5" opacity="0.85"/>
+        `
+      },
+      pectoralis_major: {
+        id: 'pectoralis_major',
+        name: 'Pectoral Mayor',
+        latin: 'Musculus pectoralis major',
+        region: 'Tórax Anterior • Estrato Superficial',
+        type: 'PG Activo (Pseudoangina)',
+        layer: 'superficial',
+        view: 'anterior',
+        pain: 'Dolor precordial anterior que irradia por la cara medial del brazo hasta el 4º y 5º dedo (simula angina de pecho / infarto). Arritmias cardíacas reflejas descritas por Travell.',
+        palpation: 'Palpación en Pinza del Pliegue Axilar Anterior',
+        palpationDesc: 'Pinzar el borde libre del pectoral mayor en el pliegue axilar anterior.',
+        landmark: 'Surco deltopectoral, clavícula medial y esternón.',
+        chain: 'Línea Anterior Superficial del Brazo',
+        nerve: 'Nervios pectorales medial y lateral (C5-T1)',
+        comp: 'Presión en pinza progresiva con el brazo en abducción a 90°.',
+        met: 'Abducción horizontal pasiva del brazo con contracción isométrica hacia la aducción.',
+        fascia: 'Descompresión fascial de la fascia pectoral y clavipectoral.',
+        precautions: 'Descartar SIEMPRE patología cardíaca aguda ante dolor en hemitórax izquierdo.',
+        points: [
+          { x: 265, y: 270, label: 'PG1' },
+          { x: 390, y: 270, label: 'PG1' },
+          { x: 290, y: 295, label: 'PG2' },
+          { x: 365, y: 295, label: 'PG2' }
+        ],
+        painRadiations: [
+          { cx: 280, cy: 280, rx: 35, ry: 35, type: 'primary' },
+          { cx: 375, cy: 280, rx: 35, ry: 35, type: 'primary' },
+          { cx: 200, cy: 330, rx: 20, ry: 50, type: 'secondary' },
+          { cx: 455, cy: 330, rx: 20, ry: 50, type: 'secondary' }
+        ],
+        deepMusclesPath: `
+          <!-- Pectoral Mayor -->
+          <path d="M 320 230 C 270 240, 240 260, 230 280 C 250 310, 310 310, 320 280 Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.5" opacity="0.8"/>
+          <path d="M 335 230 C 385 240, 415 260, 425 280 C 405 310, 345 310, 335 280 Z" fill="url(#muscle-fiber-dark)" stroke="#ef4444" stroke-width="1.5" opacity="0.8"/>
+        `
+      }
+    };
+
+    let currentGender = 'female';
+    let currentView = 'posterior';
+    let currentLayer = 'superficial';
+    let activeMuscleKey = 'trapezius';
+    let showBonyLandmarks = true;
+
+    // IMÁGENES FOTOGRÁFICAS REALES DE ESTUDIO
+    const PHOTO_ASSETS = {
+      female_posterior: 'assets/images/female_posterior.jpg',
+      female_anterior: 'assets/images/female_anterior.jpg',
+      male_posterior: 'assets/images/male_posterior.jpg',
+      male_anterior: 'assets/images/male_anterior.jpg'
+    };
+
+    function initApp() {
+      renderSymptomList();
+      renderMuscleCatalog();
+      selectMuscle('trapezius');
+      updatePhotoSource();
+    }
+
+    function setGender(gender) {
+      currentGender = gender;
+      document.getElementById('btn-female').className = gender === 'female'
+        ? 'px-3 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 bg-medical-600 text-white shadow-sm'
+        : 'px-3 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-white';
+      document.getElementById('btn-male').className = gender === 'male'
+        ? 'px-3 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 bg-medical-600 text-white shadow-sm'
+        : 'px-3 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 text-slate-400 hover:text-white';
+      updatePhotoSource();
+      renderOverlays();
+    }
+
+    function setView(view) {
+      currentView = view;
+      document.getElementById('btn-view-post').className = view === 'posterior'
+        ? 'px-3 py-1 rounded-lg text-xs font-semibold transition bg-slate-800 text-white'
+        : 'px-3 py-1 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white';
+      document.getElementById('btn-view-ant').className = view === 'anterior'
+        ? 'px-3 py-1 rounded-lg text-xs font-semibold transition bg-slate-800 text-white'
+        : 'px-3 py-1 rounded-lg text-xs font-semibold transition text-slate-400 hover:text-white';
+      
+      // Auto-seleccionar músculo compatible con la vista
+      const currentM = CLINICAL_DATA[activeMuscleKey];
+      if (currentM && currentM.view !== view) {
+        const nextKey = Object.keys(CLINICAL_DATA).find(k => CLINICAL_DATA[k].view === view);
+        if (nextKey) selectMuscle(nextKey);
+      }
+      
+      updatePhotoSource();
+      renderOverlays();
+    }
+
+    function updatePhotoSource() {
+      const key = `${currentGender}_${currentView}`;
+      const img = document.getElementById('photo-surface');
+      if (PHOTO_ASSETS[key]) {
+        img.src = PHOTO_ASSETS[key];
+      }
+    }
+
+    function handleDissectionChange(val) {
+      const deepSvg = document.getElementById('deep-dissection-svg');
+      const photo = document.getElementById('photo-surface');
+      const label = document.getElementById('dissection-val-label');
+      
+      const percent = parseInt(val);
+      deepSvg.style.opacity = (percent / 100);
+      photo.style.opacity = (1 - (percent * 0.55 / 100)); // mantiene visibilidad de referencia de la piel
+
+      if (percent === 0) {
+        label.innerText = '0% Piel Real';
+      } else if (percent === 100) {
+        label.innerText = '100% Disección Plena';
+      } else {
+        label.innerText = `${percent}% Transiluminado`;
+      }
+    }
+
+    function setDissectionLevel(level) {
+      const slider = document.getElementById('dissection-slider');
+      slider.value = level;
+      handleDissectionChange(level);
+    }
+
+    function setLayer(layer) {
+      currentLayer = layer;
+      ['sup', 'med', 'prof'].forEach(l => {
+        const key = l === 'sup' ? 'superficial' : (l === 'med' ? 'intermedia' : 'profunda');
+        const btn = document.getElementById(`layer-${l}`);
+        if (key === layer) {
+          btn.className = 'py-1 rounded bg-medical-700 text-white font-medium shadow-sm';
+        } else {
+          btn.className = 'py-1 rounded text-slate-400 hover:text-white font-medium';
+        }
+      });
+      renderOverlays();
+    }
+
+    function toggleBonyLandmarks(checked) {
+      showBonyLandmarks = checked;
+      const group = document.getElementById('bony-landmarks-group');
+      group.style.display = checked ? 'block' : 'none';
+    }
+
+    function renderSymptomList() {
+      const symptoms = [
+        { label: 'Cefalea Tensional en Sien', muscle: 'trapezius' },
+        { label: 'Tortícolis / Bloqueo Cervical', muscle: 'levator' },
+        { label: 'Dolor Anterior de Hombro', muscle: 'infraspinatus' },
+        { label: 'Lumbalgia Incapacitante', muscle: 'quadratus' },
+        { label: 'Pseudociática / Dolor Nalga', muscle: 'piriformis' },
+        { label: 'Dolor Trocantéreo / Cadera', muscle: 'gluteus_medius' },
+        { label: 'Calambres Nocturnos Gemelos', muscle: 'gastrocnemius' },
+        { label: 'Cefalea Frontal & Mareo', muscle: 'sternocleidomastoid' },
+        { label: 'Pseudoangina Precordial', muscle: 'pectoralis_major' }
+      ];
+
+      const container = document.getElementById('symptom-list');
+      container.innerHTML = symptoms.map(s => `
+        <button onclick="selectMuscle('${s.muscle}')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-slate-300 hover:bg-slate-800/80 hover:text-white transition flex items-center justify-between group">
+          <span>${s.label}</span>
+          <svg class="w-3.5 h-3.5 text-slate-500 group-hover:text-medical-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+      `).join('');
+    }
+
+    function renderMuscleCatalog() {
+      const container = document.getElementById('muscle-catalog');
+      container.innerHTML = Object.values(CLINICAL_DATA).map(m => `
+        <button id="cat-${m.id}" onclick="selectMuscle('${m.id}')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-slate-300 hover:bg-slate-800/80 hover:text-white transition flex items-center justify-between group">
+          <div>
+            <div class="font-semibold">${m.name}</div>
+            <div class="text-[10px] text-slate-500 italic">${m.latin}</div>
+          </div>
+          <span class="text-[9px] uppercase px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">${m.layer.substring(0,3)}</span>
+        </button>
+      `).join('');
+    }
+
+    function selectMuscle(key) {
+      activeMuscleKey = key;
+      const m = CLINICAL_DATA[key];
+      if (!m) return;
+
+      // Actualizar vista si no coincide
+      if (m.view !== currentView) {
+        setView(m.view);
+      }
+
+      // Detalle clínico
+      document.getElementById('detail-name').innerText = m.name;
+      document.getElementById('detail-latin').innerText = m.latin;
+      document.getElementById('detail-region').innerText = m.region;
+      document.getElementById('detail-pain').innerText = m.pain;
+      document.getElementById('detail-palpation').innerText = m.palpation;
+      document.getElementById('detail-palpation-desc').innerText = m.palpationDesc;
+      document.getElementById('detail-landmark').innerText = m.landmark;
+      document.getElementById('detail-chain').innerText = m.chain;
+      document.getElementById('detail-nerve').innerText = m.nerve;
+      document.getElementById('detail-proto-comp').innerText = m.comp;
+      document.getElementById('detail-proto-met').innerText = m.met;
+      document.getElementById('detail-proto-fascia').innerText = m.fascia;
+      document.getElementById('detail-precautions').innerText = m.precautions;
+
+      document.getElementById('active-context-text').innerText = `${m.name} (${m.type})`;
+
+      // Catálogo selector
+      Object.keys(CLINICAL_DATA).forEach(k => {
+        const el = document.getElementById(`cat-${k}`);
+        if (el) {
+          if (k === key) {
+            el.classList.add('bg-medical-950', 'border', 'border-medical-600/40', 'text-medical-300');
+          } else {
+            el.classList.remove('bg-medical-950', 'border', 'border-medical-600/40', 'text-medical-300');
+          }
+        }
+      });
+
+      renderOverlays();
+    }
+
+    function handleSearch(query) {
+      const q = query.toLowerCase().trim();
+      if (!q) return;
+      for (const [k, m] of Object.entries(CLINICAL_DATA)) {
+        if (m.name.toLowerCase().includes(q) || m.pain.toLowerCase().includes(q) || m.latin.toLowerCase().includes(q)) {
+          selectMuscle(k);
+          break;
+        }
+      }
+    }
+
+    // RENDERIZADO DE CAPAS SOBRE LA FOTO DE ALTA DEFINICIÓN (655 x 1024)
+    function renderOverlays() {
+      const deepMusclesArt = document.getElementById('deep-muscles-art');
+      const bonyGroup = document.getElementById('bony-landmarks-group');
+      const painLayer = document.getElementById('pain-radiation-layer');
+      const triggersLayer = document.getElementById('trigger-points-layer');
+
+      deepMusclesArt.innerHTML = '';
+      bonyGroup.innerHTML = '';
+      painLayer.innerHTML = '';
+      triggersLayer.innerHTML = '';
+
+      const isPost = currentView === 'posterior';
+
+      // 1. DIBUJAR REPAROS ÓSEOS PALPABLES SOBRE LA FOTO REAL
+      if (isPost) {
+        bonyGroup.innerHTML = `
+          <!-- Apófisis espinosa C7 -->
+          <circle cx="327" cy="180" r="4.5" fill="none" stroke="#38bdf8" stroke-width="1.8"/>
+          <text x="337" y="184" font-size="10" font-family="monospace" font-weight="bold" fill="#38bdf8">C7</text>
+
+          <!-- Espina de la Escápula y Acromion -->
+          <path d="M 235 220 L 290 230" class="bone-landmark"/>
+          <path d="M 420 220 L 365 230" class="bone-landmark"/>
+          <text x="210" y="215" font-size="9" font-family="monospace" fill="#7dd3fc">Acromion Izq</text>
+          <text x="400" y="215" font-size="9" font-family="monospace" fill="#7dd3fc">Acromion Der</text>
+
+          <!-- Ángulo inferior de la escápula (T7) -->
+          <circle cx="275" cy="285" r="3.5" fill="#38bdf8" opacity="0.6"/>
+          <circle cx="380" cy="285" r="3.5" fill="#38bdf8" opacity="0.6"/>
+
+          <!-- Columna Vertebral y Fascia Toracolumbar -->
+          <line x1="327" y1="180" x2="327" y2="440" stroke="#0ea5e9" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.5"/>
+
+          <!-- Crestas Ilíacas y EIPS (Espina Ilíaca Posterosuperior) -->
+          <path d="M 230 420 C 270 410, 310 435, 327 440 C 344 435, 384 410, 424 420" class="bone-landmark"/>
+          <circle cx="305" cy="445" r="4" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+          <circle cx="350" cy="445" r="4" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="330" y="460" font-size="9" font-family="monospace" text-anchor="middle" fill="#7dd3fc">EIPS (S2)</text>
+
+          <!-- Trocánter Mayor Femoral -->
+          <circle cx="215" cy="495" r="5" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+          <circle cx="440" cy="495" r="5" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="165" y="500" font-size="9" font-family="monospace" fill="#7dd3fc">Trocánter</text>
+          <text x="450" y="500" font-size="9" font-family="monospace" fill="#7dd3fc">Trocánter</text>
+        `;
+      } else {
+        bonyGroup.innerHTML = `
+          <!-- Clavículas y Horquilla Esternal -->
+          <path d="M 240 220 C 280 230, 315 225, 327 225 C 340 225, 375 230, 415 220" class="bone-landmark"/>
+          <circle cx="327" cy="225" r="4" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="327" y="215" font-size="9" font-family="monospace" text-anchor="middle" fill="#7dd3fc">Horquilla Esternal</text>
+
+          <!-- Espinas Ilíacas Anterosuperiores (EIAS) -->
+          <circle cx="255" cy="455" r="4.5" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+          <circle cx="400" cy="455" r="4.5" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="225" y="458" font-size="9" font-family="monospace" fill="#7dd3fc">EIAS</text>
+          <text x="410" y="458" font-size="9" font-family="monospace" fill="#7dd3fc">EIAS</text>
+
+          <!-- Rótula y Tuberosidad Tibial Anterior -->
+          <circle cx="275" cy="685" r="6" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+          <circle cx="380" cy="685" r="6" fill="none" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="327" y="690" font-size="9" font-family="monospace" text-anchor="middle" fill="#7dd3fc">Rótulas</text>
+        `;
+      }
+
+      // 2. MÚSCULO SELECCIONADO Y PROYECCIÓN DE DOLOR REFERIDO
+      const activeMuscle = CLINICAL_DATA[activeMuscleKey];
+      if (activeMuscle && activeMuscle.view === currentView) {
+        
+        // Músculo profundo trazado
+        if (activeMuscle.deepMusclesPath) {
+          deepMusclesArt.innerHTML = activeMuscle.deepMusclesPath;
+        }
+
+        // ZONAS DE DOLOR REFERIDO (Gradientes térmicos sobre la fotografía)
+        activeMuscle.painRadiations.forEach(r => {
+          const fill = r.type === 'primary' ? 'url(#pain-primary-radial)' : 'url(#pain-secondary-radial)';
+          painLayer.innerHTML += `
+            <ellipse cx="${r.cx}" cy="${r.cy}" rx="${r.rx}" ry="${r.ry}" fill="${fill}" />
+          `;
+        });
+
+        // MARCADORES DE PUNTOS GATILLO "✕" PULSANTES
+        activeMuscle.points.forEach((pt) => {
+          triggersLayer.innerHTML += `
+            <g class="animate-trigger cursor-pointer" onclick="selectMuscle('${activeMuscle.id}')">
+              <!-- Halo de irradiación -->
+              <circle cx="${pt.x}" cy="${pt.y}" r="15" fill="rgba(239, 68, 68, 0.4)" stroke="#ef4444" stroke-width="2"/>
+              <circle cx="${pt.x}" cy="${pt.y}" r="8" fill="#ef4444" />
+              <!-- Símbolo X -->
+              <text x="${pt.x}" y="${pt.y + 4.5}" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="900" fill="#ffffff">✕</text>
+              <!-- Etiqueta de Punto Gatillo -->
+              <rect x="${pt.x + 14}" y="${pt.y - 12}" width="28" height="15" rx="4" fill="rgba(15,23,42,0.9)" stroke="#ef4444" stroke-width="1"/>
+              <text x="${pt.x + 28}" y="${pt.y - 1}" font-family="monospace" font-size="9" font-weight="bold" fill="#f87171" text-anchor="middle">${pt.label}</text>
+            </g>
+          `;
+        });
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
