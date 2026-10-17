@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anatomical Precision Studio — Retoque Profesional sin Censura</title>
+  <style>
+    :root {
+      --bg-dark: #0f1117;
+      --bg-panel: #181b24;
+      --bg-toolbar: #202431;
+      --border-color: #2e3547;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg-dark); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Top Navbar */
+    header {
+      background: var(--bg-toolbar);
+      border-bottom: 1px solid var(--border-color);
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 10;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; }
+    .badge { background: #059669; color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 999px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+    .nav-actions { display: flex; gap: 8px; }
+    button {
+      background: #2a3142;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    button:hover { background: #374158; border-color: #4b5563; }
+    button.primary { background: var(--accent); border-color: var(--accent); color: white; }
+    button.primary:hover { background: var(--accent-hover); }
+
+    /* Main Workspace */
+    .workspace {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Left Tools Toolbar */
+    .sidebar {
+      width: 280px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 16px;
+      overflow-y: auto;
+      z-index: 5;
+    }
+    .section-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+    .tool-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .tool-btn {
+      padding: 10px 8px;
+      font-size: 12px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      border-radius: 8px;
+    }
+    .tool-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    /* Tool Parameter Sliders */
+    .param-group { display: flex; flex-direction: column; gap: 12px; background: #13161f; padding: 12px; border-radius: 8px; border: 1px solid #232838; }
+    .param-row { display: flex; flex-direction: column; gap: 4px; }
+    .param-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); }
+    input[type=range] { width: 100%; accent-color: var(--accent); }
+
+    /* Canvas Viewport */
+    .viewport {
+      flex: 1;
+      background: #090a0f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+    .canvas-container {
+      position: relative;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+      user-select: none;
+      transform-origin: center center;
+    }
+    canvas { display: block; image-rendering: -webkit-optimize-contrast; }
+
+    /* Floating View Controls */
+    .floating-hud {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(24, 27, 36, 0.92);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 6px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 10;
+    }
+    .hud-text { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span>🎨 Retoque Anatómico Médico</span>
+      <span class="badge">100% Local / Sin Censura</span>
+    </div>
+    <div class="nav-actions">
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
+      <button id="btnOpenFile">📁 Abrir Otra Imagen</button>
+      <button id="btnCompare" title="Mantén presionado para ver el original">👁️ Ver Original</button>
+      <button id="btnUndo">↩️ Deshacer</button>
+      <button id="btnRedo">↪️ Rehacer</button>
+      <button id="btnResetZoom">🔍 Centrar Zoom</button>
+      <button id="btnSave" class="primary">💾 Guardar male_anterior.jpg</button>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <!-- Panel Izquierdo de Herramientas -->
+    <div class="sidebar">
+      <div>
+        <div class="section-title">Herramienta Inteligente</div>
+        <div class="tool-group">
+          <button class="tool-btn active" data-tool="heal">
+            <span>✨</span>
+            <span>Sanar / Borrar</span>
+          </button>
+          <button class="tool-btn" data-tool="clone">
+            <span>🎯</span>
+            <span>Tampón Clonar</span>
+          </button>
+          <button class="tool-btn" data-tool="dodge">
+            <span>☀️</span>
+            <span>Aclarar (Luz)</span>
+          </button>
+          <button class="tool-btn" data-tool="burn">
+            <span>🌑</span>
+            <span>Oscurecer (Sombra)</span>
+          </button>
+          <button class="tool-btn" data-tool="smudge">
+            <span>👆</span>
+            <span>Modelar / Dedo</span>
+          </button>
+          <button class="tool-btn" data-tool="smooth">
+            <span>💧</span>
+            <span>Suavizar Piel</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="param-group">
+        <div class="section-title">Ajustes de Pincel</div>
+        <div class="param-row">
+          <div class="param-label">
+            <span>Tamaño</span>
+            <span id="lblRadius">16 px</span>
+          </div>
+          <input type="range" id="rngRadius" min="3" max="80" value="16">
+        </div>
+        <div class="param-row">
+          <div class="param-label">
+            <span>Intensidad / Opacidad</span>
+            <span id="lblStrength">45%</span>
+          </div>
+          <input type="range" id="rngStrength" min="5" max="100" value="45">
+        </div>
+        <div class="param-row">
+          <div class="param-label">
+            <span>Suavidad de borde</span>
+            <span id="lblFeather">70%</span>
+          </div>
+          <input type="range" id="rngFeather" min="10" max="100" value="70">
+        </div>
+      </div>
+
+      <div class="param-group">
+        <div class="section-title">Guía de Atajos</div>
+        <p style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">
+          • <b>Rueda del Ratón:</b> Zoom in / Zoom out<br>
+          • <b>Barra espaciadora + Arrastrar:</b> Mover lienzo<br>
+          • <b>Alt + Clic (Tampón):</b> Definir punto de origen<br>
+          • <b>Mantener 'Ver Original':</b> Comparar resultado
+        </p>
+      </div>
+
+      <div style="margin-top: auto;">
+        <button id="btnLoadOriginal" style="width: 100%; justify-content: center;">
+          🔄 Recargar Imagen Inicial
+        </button>
+      </div>
+    </div>
+
+    <!-- Lienzo Central -->
+    <div class="viewport" id="viewport">
+      <div class="canvas-container" id="canvasContainer">
+        <canvas id="mainCanvas"></canvas>
+      </div>
+
+      <div class="floating-hud">
+        <span class="hud-text" id="zoomText">Zoom: 100%</span>
+        <button id="btnZoomIn" style="padding: 2px 8px;">+</button>
+        <button id="btnZoomOut" style="padding: 2px 8px;">-</button>
+        <button id="btnFocusGroin" style="padding: 2px 10px; background: #3b82f6;">🎯 Zoom Genitales</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const container = document.getElementById('canvasContainer');
+    const viewport = document.getElementById('viewport');
+
+    let currentTool = 'heal';
+    let brushRadius = 16;
+    let brushStrength = 0.45;
+    let brushFeather = 0.70;
+
+    let zoom = 1.0;
+    let panX = 0;
+    let panY = 0;
+    let isPanning = false;
+    let spaceDown = false;
+    let panStartX = 0, panStartY = 0;
+
+    let isDrawing = false;
+    let cloneSource = null;
+    let history = [];
+    let historyIndex = -1;
+    const MAX_HISTORY = 25;
+
+    let originalImage = new Image();
+    let currentImage = new Image();
+
+    // Cargar imagen del hombre
+    currentImage.crossOrigin = 'anonymous';
+    currentImage.src = '../assets/images/male_anterior.jpg?' + Date.now();
+    currentImage.onload = () => {
+      canvas.width = currentImage.width;
+      canvas.height = currentImage.height;
+      ctx.drawImage(currentImage, 0, 0);
+
+      // Guardar copia original para comparar
+      originalImage.crossOrigin = 'anonymous';
+      originalImage.src = currentImage.src;
+
+      saveState();
+      focusGroin();
+    };
+
+    function saveState() {
+      if (historyIndex < history.length - 1) {
+        history = history.slice(0, historyIndex + 1);
+      }
+      history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+      if (history.length > MAX_HISTORY) history.shift();
+      else historyIndex++;
+    }
+
+    function undo() {
+      if (historyIndex > 0) {
+        historyIndex--;
+        ctx.putImageData(history[historyIndex], 0, 0);
+      }
+    }
+
+    function redo() {
+      if (historyIndex < history.length - 1) {
+        historyIndex++;
+        ctx.putImageData(history[historyIndex], 0, 0);
+      }
+    }
+
+    function updateTransform() {
+      container.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+      document.getElementById('zoomText').textContent = `Zoom: ${Math.round(zoom * 100)}%`;
+    }
+
+    function focusGroin() {
+      // Centrar el zoom exactamente en X=328, Y=525 con 280% de zoom
+      zoom = 2.6;
+      panX = 0;
+      panY = - (525 - canvas.height / 2) * zoom;
+      updateTransform();
+    }
+
+    // Herramientas
+    document.querySelectorAll('.tool-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTool = btn.dataset.tool;
+      });
+    });
+
+    // Controles de pincel
+    document.getElementById('rngRadius').oninput = (e) => {
+      brushRadius = parseInt(e.target.value);
+      document.getElementById('lblRadius').textContent = brushRadius + ' px';
+    };
+    document.getElementById('rngStrength').oninput = (e) => {
+      brushStrength = parseInt(e.target.value) / 100;
+      document.getElementById('lblStrength').textContent = e.target.value + '%';
+    };
+    document.getElementById('rngFeather').oninput = (e) => {
+      brushFeather = parseInt(e.target.value) / 100;
+      document.getElementById('lblFeather').textContent = e.target.value + '%';
+    };
+
+    // Zoom & Pan
+    viewport.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 1.15 : 0.87;
+      zoom = Math.min(8.0, Math.max(0.4, zoom * delta));
+      updateTransform();
+    }, { passive: false });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') spaceDown = true;
+      if (e.ctrlKey && e.code === 'KeyZ') undo();
+      if (e.ctrlKey && e.code === 'KeyY') redo();
+    });
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'Space') spaceDown = false;
+    });
+
+    viewport.addEventListener('mousedown', (e) => {
+      if (spaceDown || e.button === 1) {
+        isPanning = true;
+        panStartX = e.clientX - panX;
+        panStartY = e.clientY - panY;
+        return;
+      }
+
+      if (e.button === 0) {
+        const rect = canvas.getBoundingClientRect();
+        const mouseCanvasX = (e.clientX - rect.left) / zoom;
+        const mouseCanvasY = (e.clientY - rect.top) / zoom;
+
+        if (e.altKey && currentTool === 'clone') {
+          cloneSource = { x: mouseCanvasX, y: mouseCanvasY };
+          alert(`Punto de clonación fijado en X: ${Math.round(mouseCanvasX)}, Y: ${Math.round(mouseCanvasY)}`);
+          return;
+        }
+
+        isDrawing = true;
+        applyBrush(mouseCanvasX, mouseCanvasY);
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (isPanning) {
+        panX = e.clientX - panStartX;
+        panY = e.clientY - panStartY;
+        updateTransform();
+        return;
+      }
+
+      if (isDrawing) {
+        const rect = canvas.getBoundingClientRect();
+        const mouseCanvasX = (e.clientX - rect.left) / zoom;
+        const mouseCanvasY = (e.clientY - rect.top) / zoom;
+        applyBrush(mouseCanvasX, mouseCanvasY);
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isPanning) isPanning = false;
+      if (isDrawing) {
+        isDrawing = false;
+        saveState();
+      }
+    });
+
+    // Pinceles Inteligentes de Retoque Anatómico
+    function applyBrush(cx, cy) {
+      const r = brushRadius;
+      const x0 = Math.max(0, Math.floor(cx - r));
+      const y0 = Math.max(0, Math.floor(cy - r));
+      const x1 = Math.min(canvas.width, Math.ceil(cx + r));
+      const y1 = Math.min(canvas.height, Math.ceil(cy + r));
+      const w = x1 - x0;
+      const h = y1 - y0;
+      if (w <= 0 || h <= 0) return;
+
+      const imgData = ctx.getImageData(x0, y0, w, h);
+      const data = imgData.data;
+
+      // Calcular promedio de color del entorno para el pincel de Sanación (Healing)
+      let avgR = 0, avgG = 0, avgB = 0, avgCnt = 0;
+      if (currentTool === 'heal' || currentTool === 'smooth') {
+        for (let py = 0; py < h; py += 2) {
+          for (let px = 0; px < w; px += 2) {
+            const d = Math.hypot(px + x0 - cx, py + y0 - cy);
+            if (d >= r * 0.7 && d <= r) {
+              const idx = (py * w + px) * 4;
+              avgR += data[idx];
+              avgG += data[idx + 1];
+              avgB += data[idx + 2];
+              avgCnt++;
+            }
+          }
+        }
+        if (avgCnt > 0) {
+          avgR /= avgCnt;
+          avgG /= avgCnt;
+          avgB /= avgCnt;
+        }
+      }
+
+      for (let py = 0; py < h; py++) {
+        for (let px = 0; px < w; px++) {
+          const dist = Math.hypot(px + x0 - cx, py + y0 - cy);
+          if (dist > r) continue;
+
+          // Perfil gaussiano de suavizado del borde
+          const normDist = dist / r;
+          let weight = Math.cos(normDist * Math.PI * 0.5);
+          weight = Math.pow(weight, brushFeather * 2.5) * brushStrength;
+
+          const idx = (py * w + px) * 4;
+          let pr = data[idx];
+          let pg = data[idx + 1];
+          let pb = data[idx + 2];
+
+          if (currentTool === 'heal') {
+            // Sanación: combina textura local con el tono de piel del entorno
+            data[idx] = pr * (1 - weight * 0.6) + avgR * (weight * 0.6);
+            data[idx + 1] = pg * (1 - weight * 0.6) + avgG * (weight * 0.6);
+            data[idx + 2] = pb * (1 - weight * 0.6) + avgB * (weight * 0.6);
+          } else if (currentTool === 'dodge') {
+            // Aclarar (Luz anatómica 3D)
+            data[idx] = Math.min(255, pr + 45 * weight);
+            data[idx + 1] = Math.min(255, pg + 38 * weight);
+            data[idx + 2] = Math.min(255, pb + 32 * weight);
+          } else if (currentTool === 'burn') {
+            // Oscurecer (Sombra o surco anatómico)
+            data[idx] = Math.max(0, pr * (1 - weight * 0.5));
+            data[idx + 1] = Math.max(0, pg * (1 - weight * 0.5));
+            data[idx + 2] = Math.max(0, pb * (1 - weight * 0.5));
+          } else if (currentTool === 'smooth') {
+            // Suavizado de ruido/arrugas
+            data[idx] = pr * (1 - weight * 0.5) + avgR * (weight * 0.5);
+            data[idx + 1] = pg * (1 - weight * 0.5) + avgG * (weight * 0.5);
+            data[idx + 2] = pb * (1 - weight * 0.5) + avgB * (weight * 0.5);
+          } else if (currentTool === 'clone' && cloneSource) {
+            // Tampón de clonar
+            const sx = Math.floor(cloneSource.x + (px + x0 - cx));
+            const sy = Math.floor(cloneSource.y + (py + y0 - cy));
+            if (sx >= 0 && sx < canvas.width && sy >= 0 && sy < canvas.height) {
+              const srcPixel = ctx.getImageData(sx, sy, 1, 1).data;
+              data[idx] = pr * (1 - weight) + srcPixel[0] * weight;
+              data[idx + 1] = pg * (1 - weight) + srcPixel[1] * weight;
+              data[idx + 2] = pb * (1 - weight) + srcPixel[2] * weight;
+            }
+          }
+        }
+      }
+      ctx.putImageData(imgData, x0, y0);
+    }
+
+    // Comparar original
+    const btnCompare = document.getElementById('btnCompare');
+    btnCompare.addEventListener('mousedown', () => {
+      if (originalImage.complete) {
+        ctx.drawImage(originalImage, 0, 0);
+      }
+    });
+    btnCompare.addEventListener('mouseup', () => {
+      if (historyIndex >= 0) {
+        ctx.putImageData(history[historyIndex], 0, 0);
+      }
+    });
+
+    document.getElementById('btnUndo').onclick = undo;
+    document.getElementById('btnRedo').onclick = redo;
+    document.getElementById('btnFocusGroin').onclick = focusGroin;
+    document.getElementById('btnResetZoom').onclick = () => {
+      zoom = 1.0; panX = 0; panY = 0; updateTransform();
+    };
+    document.getElementById('btnZoomIn').onclick = () => {
+      zoom = Math.min(8.0, zoom * 1.25); updateTransform();
+    };
+    document.getElementById('btnZoomOut').onclick = () => {
+      zoom = Math.max(0.4, zoom * 0.8); updateTransform();
+    };
+
+    // Cargar archivo local manualmente o por arrastre
+    const fileInput = document.getElementById('fileInput');
+    document.getElementById('btnOpenFile').onclick = () => fileInput.click();
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) loadFile(file);
+    };
+
+    window.addEventListener('dragover', (e) => e.preventDefault());
+    window.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (e.dataTransfer.files.length > 0) loadFile(e.dataTransfer.files[0]);
+    });
+
+    function loadFile(file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          originalImage = new Image();
+          originalImage.src = ev.target.result;
+          history = [];
+          historyIndex = -1;
+          saveState();
+          focusGroin();
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Guardar imagen retocada
+    document.getElementById('btnSave').onclick = () => {
+      canvas.toBlob((blob) => {
+        const link = document.createElement('a');
+        link.download = 'male_anterior.jpg';
+        link.href = URL.createObjectURL(blob);
+        link.click();
+      }, 'image/jpeg', 0.98);
+    };
+  </script>
+</body>
+</html>
